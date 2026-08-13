@@ -31,6 +31,21 @@ public enum ErrorCode {
         HttpStatus.INTERNAL_SERVER_ERROR,
         "INTERNAL_SERVER_ERROR",
         "서버 내부 오류가 발생했습니다."
+    ),
+    RESERVATION_NOT_FOUND(
+        HttpStatus.NOT_FOUND,
+        "RESERVATION_NOT_FOUND",
+        "예약을 찾지 못했습니다."
+    ),
+    RESERVATION_NOT_PENDING(
+        HttpStatus.CONFLICT,
+        "RESERVATION_NOT_PENDING",
+        "예약 상태가 'PENDING'이 아닙니다."
+    ),
+    RESERVATION_EXPIRED(
+        HttpStatus.CONFLICT,
+        "RESERVATION_EXPIRED",
+        "예약이 만료되었습니다."
     );
     private final HttpStatus status;
     private final String code;

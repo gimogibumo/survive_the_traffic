@@ -1,6 +1,7 @@
 package com.survive_the_traffic.seat.domain;
 
 import com.survive_the_traffic.concert.domain.Concert;
+import com.survive_the_traffic.seat.exception.SeatNotAvailableException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -18,7 +19,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
-@Setter
 @NoArgsConstructor
 @Entity
 @Table(
@@ -60,4 +60,18 @@ public class Seat {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private SeatStatus status;
+
+    public void hold() {
+        if(status != SeatStatus.AVAILABLE) {
+            throw new SeatNotAvailableException();
+        }
+        this.status = SeatStatus.HELD;
+    }
+
+    public void sell() {
+        if(status != SeatStatus.HELD) {
+            throw new SeatNotAvailableException();
+        }
+        this.status = SeatStatus.SOLD;
+    }
 }

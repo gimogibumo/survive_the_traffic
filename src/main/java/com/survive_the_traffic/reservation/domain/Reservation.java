@@ -1,5 +1,7 @@
 package com.survive_the_traffic.reservation.domain;
 
+import com.survive_the_traffic.reservation.exception.ReservationExpiredException;
+import com.survive_the_traffic.reservation.exception.ReservationNotPendingException;
 import com.survive_the_traffic.seat.domain.Seat;
 import com.survive_the_traffic.user.domain.User;
 import jakarta.persistence.Column;
@@ -14,9 +16,17 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "reservation")
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
 public class Reservation {
 
     @Id
@@ -40,4 +50,18 @@ public class Reservation {
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
+
+    public void validatePayable(LocalDateTime now) {
+        if (status != ReservationStatus.PENDING) {
+            throw new ReservationNotPendingException();
+        }
+
+        if (expiresAt.isBefore(now)) {
+            throw new ReservationExpiredException();
+        }
+    }
+
+    public void confirm() {
+        this.status = ReservationStatus.CONFIRMED;
+    }
 }

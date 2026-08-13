@@ -13,9 +13,17 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "payment")
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+@Getter
 public class Payment {
 
     @Id
