@@ -41,6 +41,7 @@ public class ReservationConcurrencyTest {
                     reservationService.createReservation(new ReservationRequest(userId, 1L)); // 모든 스레드가 같은 좌석 ID를 사용
                     successCount.incrementAndGet();
                 } catch(Exception e) {
+                    System.out.println(e.getClass().getName() + ": " + e.getMessage());
                     failureCount.incrementAndGet();
                 } finally {
                     donelatch.countDown();

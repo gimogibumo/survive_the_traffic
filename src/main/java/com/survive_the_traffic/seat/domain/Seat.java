@@ -14,12 +14,18 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.Version;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@Setter
 @Entity
 @Table(
     name = "seat",
@@ -74,4 +80,7 @@ public class Seat {
         }
         this.status = SeatStatus.SOLD;
     }
+
+    @Version
+    private Long version;
 }
