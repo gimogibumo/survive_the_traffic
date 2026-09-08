@@ -21,7 +21,7 @@ public class UserService {
         if(!userRepository.existsById(userId)) {
             throw new UserNotFoundException();
         }
-        return reservationRepository.findAllByUserId(userId)
+        return reservationRepository.findAllByUserIdWithSeatAndConcert(userId)
             .stream()
             .map(ReservationDetailResponse::from)
             .toList();

@@ -55,7 +55,7 @@ class UserServiceTest {
         when(userRepository.existsById(userId))
             .thenReturn(true);
 
-        when(reservationRepository.findAllByUserId(userId))
+        when(reservationRepository.findAllByUserIdWithSeatAndConcert(userId))
             .thenReturn(List.of(reservation1, reservation2));
 
 
@@ -157,7 +157,7 @@ class UserServiceTest {
             .existsById(userId);
 
         verify(reservationRepository)
-            .findAllByUserId(userId);
+            .findAllByUserIdWithSeatAndConcert(userId);
     }
 
     @Test
@@ -170,7 +170,7 @@ class UserServiceTest {
         when(userRepository.existsById(userId))
             .thenReturn(true);
 
-        when(reservationRepository.findAllByUserId(userId))
+        when(reservationRepository.findAllByUserIdWithSeatAndConcert(userId))
             .thenReturn(List.of());
 
 
@@ -186,7 +186,7 @@ class UserServiceTest {
             .existsById(userId);
 
         verify(reservationRepository)
-            .findAllByUserId(userId);
+            .findAllByUserIdWithSeatAndConcert(userId);
     }
 
     @Test
