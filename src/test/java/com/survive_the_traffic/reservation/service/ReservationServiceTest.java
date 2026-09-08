@@ -74,7 +74,7 @@ class ReservationServiceTest {
         when(userRepository.findById(userId))
             .thenReturn(Optional.of(user));
 
-        when(seatRepository.findById(seatId))
+        when(seatRepository.findByIdWithPessimisticLock(seatId))
             .thenReturn(Optional.of(seat));
 
         when(seat.getId())
@@ -171,7 +171,7 @@ class ReservationServiceTest {
         when(userRepository.findById(userId))
             .thenReturn(Optional.of(user));
 
-        when(seatRepository.findById(seatId))
+        when(seatRepository.findByIdWithPessimisticLock(seatId))
             .thenReturn(Optional.empty());
 
         // when & then
@@ -181,7 +181,7 @@ class ReservationServiceTest {
         );
 
         verify(userRepository).findById(userId);
-        verify(seatRepository).findById(seatId);
+        verify(seatRepository).findByIdWithPessimisticLock(seatId);
 
         verifyNoInteractions(reservationRepository);
     }
@@ -203,7 +203,7 @@ class ReservationServiceTest {
         when(userRepository.findById(userId))
             .thenReturn(Optional.of(user));
 
-        when(seatRepository.findById(seatId))
+        when(seatRepository.findByIdWithPessimisticLock(seatId))
             .thenReturn(Optional.of(seat));
 
         doThrow(new SeatNotAvailableException())

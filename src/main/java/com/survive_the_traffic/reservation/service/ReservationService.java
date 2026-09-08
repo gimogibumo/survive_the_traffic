@@ -36,8 +36,7 @@ public class ReservationService {
     public ReservationResponse createReservation(@Validated ReservationRequest request) {
 
         User user = userRepository.findById(request.userId()).orElseThrow(UserNotFoundException::new);
-        Seat seat = seatRepository.findById(request.seatId()).orElseThrow(SeatNotFoundException::new);
-//        Seat seat = seatRepository.findByIdWithPessimisticLock(request.seatId()).orElseThrow(SeatNotFoundException::new);
+        Seat seat = seatRepository.findByIdWithPessimisticLock(request.seatId()).orElseThrow(SeatNotFoundException::new);
         seat.hold();
         seatRepository.save(seat);
 
