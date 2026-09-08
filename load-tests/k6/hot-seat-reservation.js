@@ -12,6 +12,7 @@ const baseUrl = __ENV.BASE_URL || 'http://localhost:8080';
 const vus = Number(__ENV.VUS || 100);
 const iterations = Number(__ENV.ITERATIONS || vus);
 const userCount = Number(__ENV.USER_COUNT || iterations);
+const seed = __ENV.SEED_FILE ? JSON.parse(open(__ENV.SEED_FILE)) : null;
 
 export const options = {
   thresholds: {
@@ -35,6 +36,12 @@ export const options = {
 
 export function setup() {
   if (userCount < iterations) fail('USER_COUNT must be >= ITERATIONS');
+  if (seed) {
+    if (seed.userIds.length < iterations || seed.seatIds.length !== 1) {
+      fail('Seed must contain one seat and a distinct user per iteration');
+    }
+    return seed;
+  }
   const response = http.post(
     `${baseUrl}/api/performance/seed/hot-seat?userCount=${userCount}`
   );
