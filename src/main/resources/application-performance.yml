@@ -1,0 +1,10 @@
+logging:
+  level:
+    org.hibernate.SQL: info
+    com.zaxxer.hikari: debug
+
+spring:
+  jpa:
+    properties:
+      hibernate:
+        generate_statistics: true

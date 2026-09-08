@@ -7,6 +7,9 @@ spring:
     url: jdbc:postgresql://localhost:5432/ticketing
     username: ticketing
     password: ticketing
+    hikari:
+      maximum-pool-size: ${HIKARI_MAX_POOL_SIZE:10}
+      connection-timeout: ${HIKARI_CONNECTION_TIMEOUT:30000}
 
   jpa:
     hibernate:
@@ -25,3 +28,14 @@ spring:
 logging:
   level:
     org.hibernate.SQL: debug
+
+server:
+  tomcat:
+    threads:
+      max: ${TOMCAT_MAX_THREADS:200}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics
