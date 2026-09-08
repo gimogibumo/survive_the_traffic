@@ -1,7 +1,7 @@
 logging:
   level:
     org.hibernate.SQL: info
-    com.zaxxer.hikari: debug
+    com.zaxxer.hikari: info
 
 spring:
   jpa:
