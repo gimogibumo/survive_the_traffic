@@ -1,0 +1,1 @@
+{"query":"SELECT * FROM seat WHERE concert_id = 79","plan":["Index Scan using idx_seat_concert_id on seat  (cost=0.29..8.38 rows=5 width=51) (actual time=0.052..0.624 rows=10000 loops=1)","  Index Cond: (concert_id = 79)","  Buffers: shared hit=116","Planning:","  Buffers: shared hit=5","Planning Time: 0.124 ms","Execution Time: 0.849 ms"]}

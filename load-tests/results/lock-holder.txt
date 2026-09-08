@@ -1,0 +1,13 @@
+BEGIN
+SET
+   id   
+--------
+ 130881
+(1 row)
+
+ pg_sleep 
+----------
+ 
+(1 row)
+
+ROLLBACK

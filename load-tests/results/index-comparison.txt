@@ -1,0 +1,87 @@
+BEGIN
+SELECT 130878
+ANALYZE
+ total_seats 
+-------------
+      130878
+(1 row)
+
+No index (warm-up)
+                                                   QUERY PLAN                                                   
+----------------------------------------------------------------------------------------------------------------
+ Seq Scan on phase3_seat  (cost=0.00..3043.98 rows=9615 width=51) (actual time=6.644..7.645 rows=10000 loops=1)
+   Filter: (concert_id = 79)
+   Rows Removed by Filter: 120878
+   Buffers: local read=1408
+ Planning:
+   Buffers: shared hit=29
+ Planning Time: 0.070 ms
+ Execution Time: 7.858 ms
+(8 rows)
+
+No index (measured)
+                                                   QUERY PLAN                                                   
+----------------------------------------------------------------------------------------------------------------
+ Seq Scan on phase3_seat  (cost=0.00..3043.98 rows=9615 width=51) (actual time=6.541..7.225 rows=10000 loops=1)
+   Filter: (concert_id = 79)
+   Rows Removed by Filter: 120878
+   Buffers: local read=1408
+ Planning Time: 0.029 ms
+ Execution Time: 7.437 ms
+(6 rows)
+
+CREATE INDEX
+Phase 2 composite index (warm-up)
+                                                           QUERY PLAN                                                            
+---------------------------------------------------------------------------------------------------------------------------------
+ Bitmap Heap Scan on phase3_seat  (cost=266.93..1795.12 rows=9615 width=51) (actual time=0.296..0.694 rows=10000 loops=1)
+   Recheck Cond: (concert_id = 79)
+   Heap Blocks: exact=104
+   Buffers: shared hit=3, local hit=104 read=52
+   ->  Bitmap Index Scan on phase3_position  (cost=0.00..264.53 rows=9615 width=0) (actual time=0.287..0.287 rows=10000 loops=1)
+         Index Cond: (concert_id = 79)
+         Buffers: shared hit=3, local read=52
+ Planning:
+   Buffers: shared hit=4, local read=1
+ Planning Time: 0.277 ms
+ Execution Time: 1.120 ms
+(11 rows)
+
+Phase 2 composite index (measured)
+                                                           QUERY PLAN                                                            
+---------------------------------------------------------------------------------------------------------------------------------
+ Bitmap Heap Scan on phase3_seat  (cost=266.93..1795.12 rows=9615 width=51) (actual time=0.142..0.567 rows=10000 loops=1)
+   Recheck Cond: (concert_id = 79)
+   Heap Blocks: exact=104
+   Buffers: local hit=156
+   ->  Bitmap Index Scan on phase3_position  (cost=0.00..264.53 rows=9615 width=0) (actual time=0.136..0.136 rows=10000 loops=1)
+         Index Cond: (concert_id = 79)
+         Buffers: local hit=52
+ Planning Time: 0.014 ms
+ Execution Time: 0.788 ms
+(9 rows)
+
+CREATE INDEX
+Phase 3 additional index (warm-up)
+                                                              QUERY PLAN                                                              
+--------------------------------------------------------------------------------------------------------------------------------------
+ Index Scan using phase3_concert on phase3_seat  (cost=0.29..311.82 rows=9615 width=51) (actual time=0.008..0.477 rows=10000 loops=1)
+   Index Cond: (concert_id = 79)
+   Buffers: local hit=104 read=10
+ Planning:
+   Buffers: shared hit=4, local read=1
+ Planning Time: 0.056 ms
+ Execution Time: 0.681 ms
+(7 rows)
+
+Phase 3 additional index (measured)
+                                                              QUERY PLAN                                                              
+--------------------------------------------------------------------------------------------------------------------------------------
+ Index Scan using phase3_concert on phase3_seat  (cost=0.29..311.82 rows=9615 width=51) (actual time=0.002..0.432 rows=10000 loops=1)
+   Index Cond: (concert_id = 79)
+   Buffers: local hit=114
+ Planning Time: 0.016 ms
+ Execution Time: 0.642 ms
+(5 rows)
+
+ROLLBACK

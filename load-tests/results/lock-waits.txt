@@ -1,0 +1,9 @@
+ wait_event_type |  wait_event   | count 
+-----------------+---------------+-------
+ Client          | ClientRead    |     3
+ Lock            | transactionid |     1
+ Lock            | tuple         |     9
+ Timeout         | PgSleep       |     1
+                 |               |     1
+(5 rows)
+
