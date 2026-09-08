@@ -1,217 +1,164 @@
-package com.survive_the_traffic.user;
+package com.survive_the_traffic;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.survive_the_traffic.concert.domain.Concert;
 import com.survive_the_traffic.concert.repository.ConcertRepository;
-import com.survive_the_traffic.reservation.dto.ReservationRequest;
-import com.survive_the_traffic.reservation.repository.ReservationRepository;
-import com.survive_the_traffic.reservation.service.ReservationService;
 import com.survive_the_traffic.seat.domain.Seat;
 import com.survive_the_traffic.seat.domain.SeatStatus;
-import com.survive_the_traffic.seat.exception.SeatNotAvailableException;
 import com.survive_the_traffic.seat.repository.SeatRepository;
-import com.survive_the_traffic.user.domain.User;
-import com.survive_the_traffic.user.repository.UserRepository;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
+import java.util.UUID;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @SpringBootTest
 class ReservationOptimisticLockTest {
 
-    @Autowired
-    private ReservationService reservationService;
-
-    @Autowired
-    private ReservationRepository reservationRepository;
-
-    @Autowired
-    private SeatRepository seatRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private ConcertRepository concertRepository;
+    private final SeatRepository seatRepository;
+    private final ConcertRepository concertRepository;
+    private final PlatformTransactionManager transactionManager;
 
     private Long seatId;
-    private List<Long> userIds;
+
+    @Autowired
+    ReservationOptimisticLockTest(
+        SeatRepository seatRepository,
+        ConcertRepository concertRepository,
+        PlatformTransactionManager transactionManager
+    ) {
+        this.seatRepository = seatRepository;
+        this.concertRepository = concertRepository;
+        this.transactionManager = transactionManager;
+    }
 
     @BeforeEach
     void setUp() {
+        String suffix = UUID.randomUUID().toString();
 
-        Concert concert = Concert.builder()
-            .concertAt(LocalDateTime.of(2024, 6, 30, 19, 0))
-            .title("Test Concert")
-            .reservationOpenAt(LocalDateTime.of(2024, 5, 1, 10, 0))
-            .createdAt(LocalDateTime.of(2024, 5, 1, 10, 0))
-            .build();
-
-        concertRepository.save(concert);
-
-        // 테스트용 좌석 1개 생성
-        Seat seat = Seat.builder()
-            .section("A")
-            .rowNumber(1)
-            .seatNumber(1)
-            .price(10000L)
-            .status(SeatStatus.AVAILABLE)
-            .concert(concert)
-            .build();
-
-        Seat savedSeat = seatRepository.save(seat);
-        seatId = savedSeat.getId();
-
-        // 테스트에 사용할 User 100명 생성
-        userIds = new ArrayList<>();
-
-        for (int i = 0; i < 100; i++) {
-
-            User user = User.builder()
-                .name("user-" + i)
-                .email("user-" + i + "@test.com")
+        Concert concert = concertRepository.save(
+            Concert.builder()
+                .concertAt(LocalDateTime.of(2026, 6, 30, 19, 0))
+                .title("Optimistic Test " + suffix)
+                .reservationOpenAt(LocalDateTime.of(2026, 5, 1, 10, 0))
                 .createdAt(LocalDateTime.now())
-                .build();
+                .build()
+        );
 
-            User savedUser = userRepository.save(user);
+        Seat seat = seatRepository.save(
+            Seat.builder()
+                .section("A")
+                .rowNumber(1)
+                .seatNumber(1)
+                .price(10000L)
+                .status(SeatStatus.AVAILABLE)
+                .concert(concert)
+                .build()
+        );
 
-            userIds.add(savedUser.getId());
-        }
+        seatId = seat.getId();
     }
 
     @Test
-    void optimistic_lock으로_동시에_같은_좌석을_예약하면_한명만_성공한다()
+    void version이_같은_좌석을_동시에_수정하면_optimistic_lock_충돌이_발생한다()
+        throws Exception {
+
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        CyclicBarrier bothTransactionsLoadedSeat = new CyclicBarrier(2);
+
+        try {
+            Future<?> first = executor.submit(() ->
+                holdSeatWithoutExplicitLock(bothTransactionsLoadedSeat)
+            );
+            Future<?> second = executor.submit(() ->
+                holdSeatWithoutExplicitLock(bothTransactionsLoadedSeat)
+            );
+
+            Throwable firstFailure = failureOf(first);
+            Throwable secondFailure = failureOf(second);
+
+            assertThat(exactlyOneFailedWithOptimisticLock(
+                firstFailure,
+                secondFailure
+            )).isTrue();
+
+            Seat seat = seatRepository.findById(seatId).orElseThrow();
+            assertThat(seat.getStatus()).isEqualTo(SeatStatus.HELD);
+            assertThat(seat.getVersion()).isEqualTo(1L);
+        } finally {
+            executor.shutdownNow();
+        }
+    }
+
+    private void holdSeatWithoutExplicitLock(CyclicBarrier barrier) {
+        TransactionTemplate transactionTemplate =
+            new TransactionTemplate(transactionManager);
+
+        transactionTemplate.executeWithoutResult(status -> {
+            Seat seat = seatRepository.findById(seatId).orElseThrow();
+            await(barrier);
+            seat.hold();
+            seatRepository.flush();
+        });
+    }
+
+    private Throwable failureOf(Future<?> future)
         throws InterruptedException {
 
-        // given
-        int threadCount = 100;
+        try {
+            future.get(10, TimeUnit.SECONDS);
+            return null;
+        } catch (ExecutionException e) {
+            return e.getCause();
+        } catch (java.util.concurrent.TimeoutException e) {
+            future.cancel(true);
+            return e;
+        }
+    }
 
-        ExecutorService executorService =
-            Executors.newFixedThreadPool(32);
+    private boolean exactlyOneFailedWithOptimisticLock(
+        Throwable first,
+        Throwable second
+    ) {
+        return first == null
+            && containsOptimisticLockFailure(second)
+            || second == null
+            && containsOptimisticLockFailure(first);
+    }
 
-        CountDownLatch startLatch =
-            new CountDownLatch(1);
+    private boolean containsOptimisticLockFailure(Throwable throwable) {
+        Throwable current = throwable;
 
-        CountDownLatch doneLatch =
-            new CountDownLatch(threadCount);
+        while (current != null) {
+            String className = current.getClass().getName();
 
-        AtomicInteger successCount =
-            new AtomicInteger();
+            if (className.contains("Optimistic")
+                || className.contains("StaleObjectState")) {
+                return true;
+            }
 
-        AtomicInteger optimisticLockFailureCount =
-            new AtomicInteger();
-
-        AtomicInteger seatUnavailableCount =
-            new AtomicInteger();
-
-        AtomicInteger unexpectedFailureCount =
-            new AtomicInteger();
-
-        // when
-        for (int i = 0; i < threadCount; i++) {
-
-            Long userId = userIds.get(i);
-
-            executorService.submit(() -> {
-
-                try {
-
-                    // 모든 Thread가 여기까지 도착한 뒤 대기
-                    startLatch.await();
-
-                    reservationService.createReservation(
-                        new ReservationRequest(userId, seatId)
-                    );
-
-                    successCount.incrementAndGet();
-
-                } catch (ObjectOptimisticLockingFailureException e) {
-
-                    optimisticLockFailureCount.incrementAndGet();
-
-                    System.out.println(
-                        "[OPTIMISTIC LOCK] "
-                            + Thread.currentThread().getName()
-                    );
-
-                } catch (SeatNotAvailableException e) {
-
-                    seatUnavailableCount.incrementAndGet();
-
-                } catch (Exception e) {
-
-                    unexpectedFailureCount.incrementAndGet();
-
-                    System.out.println(
-                        "[UNEXPECTED] "
-                            + e.getClass().getName()
-                            + " : "
-                            + e.getMessage()
-                    );
-
-                } finally {
-
-                    doneLatch.countDown();
-                }
-            });
+            current = current.getCause();
         }
 
-        // 100개 task가 거의 동시에 출발
-        startLatch.countDown();
+        return false;
+    }
 
-        // 모든 task가 끝날 때까지 대기
-        doneLatch.await();
-
-        executorService.shutdown();
-
-        // then
-        System.out.println("성공: " + successCount.get());
-        System.out.println(
-            "Optimistic Lock 충돌: "
-                + optimisticLockFailureCount.get()
-        );
-        System.out.println(
-            "이미 예약된 좌석: "
-                + seatUnavailableCount.get()
-        );
-        System.out.println(
-            "예상하지 못한 실패: "
-                + unexpectedFailureCount.get()
-        );
-
-        assertThat(successCount.get())
-            .isEqualTo(1);
-
-        assertThat(unexpectedFailureCount.get())
-            .isEqualTo(0);
-
-        assertThat(
-            successCount.get()
-                + optimisticLockFailureCount.get()
-                + seatUnavailableCount.get()
-        ).isEqualTo(threadCount);
-
-        // 최종 DB 상태 확인
-        long reservationCount =
-            reservationRepository.countBySeatId(seatId);
-
-        assertThat(reservationCount)
-            .isEqualTo(1);
-
-        Seat seat = seatRepository.findById(seatId)
-            .orElseThrow();
-
-        assertThat(seat.getStatus())
-            .isEqualTo(SeatStatus.HELD);
+    private void await(CyclicBarrier barrier) {
+        try {
+            barrier.await(5, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
+        }
     }
 }
