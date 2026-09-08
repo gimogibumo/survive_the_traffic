@@ -19,6 +19,7 @@ export const options = {
 };
 
 export function setup() {
+  if (__ENV.USER_ID) return { userId: Number(__ENV.USER_ID) };
   const response = http.post(
     `${baseUrl}/api/performance/seed/user-reservations?reservationCount=${reservationCount}`
   );
@@ -32,8 +33,9 @@ export function setup() {
 }
 
 export default function (data) {
+  const prefix = __ENV.QUERY_MODE === 'lazy' ? '/api/performance/baseline' : '/api';
   const response = http.get(
-    `${baseUrl}/api/users/${data.userId}/reservations`,
+    `${baseUrl}${prefix}/users/${data.userId}/reservations`,
     { tags: { phase: 'load' } }
   );
 

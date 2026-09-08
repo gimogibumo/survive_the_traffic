@@ -19,6 +19,7 @@ export const options = {
 };
 
 export function setup() {
+  if (__ENV.CONCERT_ID) return { concertId: Number(__ENV.CONCERT_ID) };
   const response = http.post(
     `${baseUrl}/api/performance/seed/seat-read?seatCount=${seatCount}`
   );

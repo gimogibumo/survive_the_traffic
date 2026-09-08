@@ -5,6 +5,9 @@ import com.survive_the_traffic.performance.dto.ReservationScenarioSeedResponse;
 import com.survive_the_traffic.performance.dto.SeatReadSeedResponse;
 import com.survive_the_traffic.performance.dto.UserReservationSeedResponse;
 import com.survive_the_traffic.performance.service.PerformanceSeedService;
+import com.survive_the_traffic.performance.service.PerformanceQueryService;
+import com.survive_the_traffic.reservation.dto.ReservationDetailResponse;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,6 +24,14 @@ import org.springframework.web.bind.annotation.RestController;
 public class PerformanceController {
 
     private final PerformanceSeedService performanceSeedService;
+    private final PerformanceQueryService performanceQueryService;
+
+    @GetMapping("/baseline/users/{userId}/reservations")
+    public List<ReservationDetailResponse> getUserReservationsBeforeFetchJoin(
+        @PathVariable Long userId
+    ) {
+        return performanceQueryService.getUserReservationsBeforeFetchJoin(userId);
+    }
 
     @PostMapping("/seed/seat-read")
     public SeatReadSeedResponse seedSeatReadData(

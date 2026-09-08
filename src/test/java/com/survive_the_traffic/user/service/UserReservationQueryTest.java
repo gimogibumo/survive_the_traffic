@@ -3,6 +3,7 @@ package com.survive_the_traffic.user.service;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.survive_the_traffic.concert.domain.Concert;
+import com.survive_the_traffic.performance.service.PerformanceQueryService;
 import com.survive_the_traffic.concert.repository.ConcertRepository;
 import com.survive_the_traffic.reservation.domain.Reservation;
 import com.survive_the_traffic.reservation.domain.ReservationStatus;
@@ -22,11 +23,16 @@ import org.hibernate.stat.Statistics;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest(properties = {
     "spring.jpa.properties.hibernate.generate_statistics=true"
 })
+@ActiveProfiles("performance")
 class UserReservationQueryTest {
+
+    @Autowired
+    private PerformanceQueryService performanceQueryService;
 
     @Autowired
     private UserService userService;
@@ -93,10 +99,19 @@ class UserReservationQueryTest {
             .getStatistics();
         statistics.clear();
 
+        List<ReservationDetailResponse> before =
+            performanceQueryService.getUserReservationsBeforeFetchJoin(user.getId());
+        long beforeCount = statistics.getPrepareStatementCount();
+        assertThat(beforeCount).isEqualTo(103);
+        statistics.clear();
+
         List<ReservationDetailResponse> result =
             userService.getUserReservations(user.getId());
 
         assertThat(result).hasSize(100);
-        assertThat(statistics.getPrepareStatementCount()).isLessThanOrEqualTo(2);
+        assertThat(result).containsExactlyInAnyOrderElementsOf(before);
+        assertThat(statistics.getPrepareStatementCount()).isEqualTo(2);
+        System.out.printf("Reservation SQL count: lazy=%d, fetchJoin=%d%n",
+            beforeCount, statistics.getPrepareStatementCount());
     }
 }
