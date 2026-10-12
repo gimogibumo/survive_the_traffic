@@ -79,8 +79,6 @@ public class ConcertService {
 
         System.out.println("2. EVENT PUBLISHED");
 
-        throw new RuntimeException("rollback test");
-
-//        return ConcertResponse.from(concert);
+        return ConcertResponse.from(concert);
     }
 }
