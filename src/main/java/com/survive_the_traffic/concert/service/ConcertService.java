@@ -7,13 +7,12 @@ import com.survive_the_traffic.concert.dto.ConcertUpdateRequest;
 import com.survive_the_traffic.concert.event.ConcertUpdatedEvent;
 import com.survive_the_traffic.concert.exception.ConcertNotFoundException;
 import com.survive_the_traffic.concert.repository.ConcertRepository;
-import com.survive_the_traffic.seat.domain.Seat;
 import com.survive_the_traffic.seat.dto.SeatResponse;
 import com.survive_the_traffic.seat.repository.SeatRepository;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +25,7 @@ public class ConcertService {
     private final SeatRepository seatRepository;
     private final ConcertCacheRepository concertCacheRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final ConcurrentHashMap<Long, Object> locks = new ConcurrentHashMap<>();
 
     public List<ConcertResponse> getConcerts() {
         return concertRepository.findAll().stream()
@@ -40,12 +40,32 @@ public class ConcertService {
             return cached;
         }
 
-        Concert concert = concertRepository.findById(concertId).orElseThrow(
-            ConcertNotFoundException::new);
+        Object lock = locks.computeIfAbsent(concertId, key -> new Object());
 
-        ConcertResponse response = ConcertResponse.from(concert);
-        concertCacheRepository.save(concertId, response);
-        return response;
+        synchronized (lock) {
+            cached =
+                concertCacheRepository.findById(concertId);
+
+            if (cached != null) {
+                return cached;
+            }
+            // 여전히 없으면 이 Thread만 DB 조회
+            Concert concert =
+                concertRepository.findById(concertId)
+                    .orElseThrow(
+                        ConcertNotFoundException::new
+                    );
+
+            ConcertResponse response =
+                ConcertResponse.from(concert);
+
+            concertCacheRepository.save(
+                concertId,
+                response
+            );
+
+            return response;
+        }
     }
 
     public List<SeatResponse> getConcertSeats(Long concertId) {
