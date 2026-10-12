@@ -4,6 +4,7 @@ import com.survive_the_traffic.concert.cache.ConcertCacheRepository;
 import com.survive_the_traffic.concert.domain.Concert;
 import com.survive_the_traffic.concert.dto.ConcertResponse;
 import com.survive_the_traffic.concert.dto.ConcertUpdateRequest;
+import com.survive_the_traffic.concert.event.ConcertUpdatedEvent;
 import com.survive_the_traffic.concert.exception.ConcertNotFoundException;
 import com.survive_the_traffic.concert.repository.ConcertRepository;
 import com.survive_the_traffic.seat.domain.Seat;
@@ -11,6 +12,7 @@ import com.survive_the_traffic.seat.dto.SeatResponse;
 import com.survive_the_traffic.seat.repository.SeatRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +25,7 @@ public class ConcertService {
     private final ConcertRepository concertRepository;
     private final SeatRepository seatRepository;
     private final ConcertCacheRepository concertCacheRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public List<ConcertResponse> getConcerts() {
         return concertRepository.findAll().stream()
@@ -70,7 +73,11 @@ public class ConcertService {
             request.concertAt()
         );
 
-        concertCacheRepository.delete(concertId);
+        System.out.println("1. CONCERT UPDATED IN MEMORY");
+
+        eventPublisher.publishEvent(new ConcertUpdatedEvent(concertId));
+
+        System.out.println("2. EVENT PUBLISHED");
 
         return ConcertResponse.from(concert);
     }
