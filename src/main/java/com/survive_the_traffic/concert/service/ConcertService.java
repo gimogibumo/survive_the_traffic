@@ -1,5 +1,6 @@
 package com.survive_the_traffic.concert.service;
 
+import com.survive_the_traffic.concert.cache.ConcertCacheRepository;
 import com.survive_the_traffic.concert.domain.Concert;
 import com.survive_the_traffic.concert.dto.ConcertResponse;
 import com.survive_the_traffic.concert.exception.ConcertNotFoundException;
@@ -20,6 +21,7 @@ public class ConcertService {
 
     private final ConcertRepository concertRepository;
     private final SeatRepository seatRepository;
+    private final ConcertCacheRepository concertCacheRepository;
 
     public List<ConcertResponse> getConcerts() {
         return concertRepository.findAll().stream()
@@ -28,9 +30,18 @@ public class ConcertService {
     }
 
     public ConcertResponse getConcertById(Long concertId) {
+        ConcertResponse cached = concertCacheRepository.findById(concertId);
+
+        if(cached != null) {
+            return cached;
+        }
+
         Concert concert = concertRepository.findById(concertId).orElseThrow(
             ConcertNotFoundException::new);
-        return ConcertResponse.from(concert);
+
+        ConcertResponse response = ConcertResponse.from(concert);
+        concertCacheRepository.save(concertId, response);
+        return response;
     }
 
     public List<SeatResponse> getConcertSeats(Long concertId) {
