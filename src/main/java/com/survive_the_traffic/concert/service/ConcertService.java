@@ -3,6 +3,7 @@ package com.survive_the_traffic.concert.service;
 import com.survive_the_traffic.concert.cache.ConcertCacheRepository;
 import com.survive_the_traffic.concert.domain.Concert;
 import com.survive_the_traffic.concert.dto.ConcertResponse;
+import com.survive_the_traffic.concert.dto.ConcertUpdateRequest;
 import com.survive_the_traffic.concert.exception.ConcertNotFoundException;
 import com.survive_the_traffic.concert.repository.ConcertRepository;
 import com.survive_the_traffic.seat.domain.Seat;
@@ -52,5 +53,25 @@ public class ConcertService {
         return seatRepository.findAllByConcertId(concertId).stream()
                 .map(SeatResponse::from)
                 .toList();
+    }
+
+    @Transactional
+    public ConcertResponse updateConcert(
+        Long concertId,
+        ConcertUpdateRequest request
+    ) {
+
+        Concert concert = concertRepository.findById(concertId)
+            .orElseThrow(ConcertNotFoundException::new);
+
+        concert.update(
+            request.title(),
+            request.reservationOpenAt(),
+            request.concertAt()
+        );
+
+        concertCacheRepository.delete(concertId);
+
+        return ConcertResponse.from(concert);
     }
 }

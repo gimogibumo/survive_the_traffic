@@ -31,4 +31,7 @@ public class ConcertCacheRepository {
 
     }
 
+    public void delete(Long concertId) {
+        redisTemplate.delete(KEY_PREFIX + concertId);
+    }
 }
