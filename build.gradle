@@ -36,6 +36,9 @@ dependencies {
     //flyway
     implementation 'org.springframework.boot:spring-boot-starter-flyway'
     runtimeOnly 'org.flywaydb:flyway-database-postgresql'
+
+    //redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 }
 
 tasks.named('test') {

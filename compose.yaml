@@ -22,5 +22,12 @@ services:
 
     restart: unless-stopped
 
+  redis:
+    image: redis:7
+    container_name: ticketing-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
 volumes:
   ticketing-postgres-data:
