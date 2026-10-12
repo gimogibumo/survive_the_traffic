@@ -1,6 +1,7 @@
 package com.survive_the_traffic.concert.cache;
 
 import com.survive_the_traffic.concert.dto.ConcertResponse;
+import java.time.Duration;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
@@ -14,11 +15,9 @@ public class ConcertCacheRepository {
     private final RedisTemplate<String, Object> redisTemplate;
 
     public ConcertResponse findById(Long concertId) {
-        System.out.println("REDIS GET: " + KEY_PREFIX + concertId);
         Object cached =
             redisTemplate.opsForValue().get(KEY_PREFIX + concertId);
 
-        System.out.println("CACHED: " + cached);
 
         if(cached == null) {
             return null;
@@ -28,9 +27,7 @@ public class ConcertCacheRepository {
     }
 
     public void save(Long concertId, ConcertResponse response) {
-        System.out.println("REDIS SAVE: " + KEY_PREFIX + concertId);
-        System.out.println("REDIS VALUE: " + response);
-        redisTemplate.opsForValue().set(KEY_PREFIX + concertId, response);
+        redisTemplate.opsForValue().set(KEY_PREFIX + concertId, response, Duration.ofSeconds(10));
 
     }
 
