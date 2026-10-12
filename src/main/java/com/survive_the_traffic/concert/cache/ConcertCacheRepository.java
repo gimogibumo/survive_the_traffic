@@ -1,5 +1,7 @@
 package com.survive_the_traffic.concert.cache;
 
+import com.survive_the_traffic.concert.dto.CacheStatus;
+import com.survive_the_traffic.concert.dto.ConcertCacheResult;
 import com.survive_the_traffic.concert.dto.ConcertResponse;
 import java.time.Duration;
 import lombok.RequiredArgsConstructor;
@@ -14,26 +16,32 @@ import org.springframework.stereotype.Component;
 public class ConcertCacheRepository {
 
     private static final String KEY_PREFIX = "concert:";
+    private static final String NOT_FOUND_VALUE = "__NOT_FOUND__";
 
     private final RedisTemplate<String, Object> redisTemplate;
 
-    public ConcertResponse findById(Long concertId) {
+    public ConcertCacheResult findById(Long concertId) {
         try {
             Object cached =
                 redisTemplate.opsForValue().get(KEY_PREFIX + concertId);
 
             if (cached == null) {
-                return null;
+                return new ConcertCacheResult(CacheStatus.MISS,null);
             }
 
-            return (ConcertResponse) cached;
+            if(NOT_FOUND_VALUE.equals(cached)) {
+                return new ConcertCacheResult(CacheStatus.NOT_FOUND, null);
+            }
+
+            return new ConcertCacheResult(CacheStatus.HIT, (ConcertResponse) cached);
+
         } catch (DataAccessException e) {
             log.warn(
                 "Redis read failed. concertId={}",
                 concertId,
                 e
             );
-            return null;
+            return new ConcertCacheResult(CacheStatus.MISS, null);
         }
     }
 
@@ -57,6 +65,22 @@ public class ConcertCacheRepository {
         } catch (DataAccessException e) {
             log.warn(
                 "Redis cache eviction failed. concertId={}",
+                concertId,
+                e
+            );
+        }
+    }
+
+    public void saveNotFound(Long concertId) {
+        try {
+            redisTemplate.opsForValue().set(
+                KEY_PREFIX + concertId,
+                NOT_FOUND_VALUE,
+                Duration.ofSeconds(30)
+            );
+        } catch (DataAccessException e) {
+            log.warn(
+                "Redis negative cache write failed. concertId={}",
                 concertId,
                 e
             );

@@ -2,6 +2,8 @@ package com.survive_the_traffic.concert.service;
 
 import com.survive_the_traffic.concert.cache.ConcertCacheRepository;
 import com.survive_the_traffic.concert.domain.Concert;
+import com.survive_the_traffic.concert.dto.CacheStatus;
+import com.survive_the_traffic.concert.dto.ConcertCacheResult;
 import com.survive_the_traffic.concert.dto.ConcertResponse;
 import com.survive_the_traffic.concert.dto.ConcertUpdateRequest;
 import com.survive_the_traffic.concert.event.ConcertUpdatedEvent;
@@ -10,6 +12,7 @@ import com.survive_the_traffic.concert.repository.ConcertRepository;
 import com.survive_the_traffic.seat.dto.SeatResponse;
 import com.survive_the_traffic.seat.repository.SeatRepository;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -34,27 +37,36 @@ public class ConcertService {
     }
 
     public ConcertResponse getConcertById(Long concertId) {
-        ConcertResponse cached = concertCacheRepository.findById(concertId);
+        ConcertCacheResult cacheResult = concertCacheRepository.findById(concertId);
 
-        if(cached != null) {
-            return cached;
+        if(cacheResult.cacheStatus() == CacheStatus.HIT) {
+            return cacheResult.concert();
+        }
+
+        if(cacheResult.cacheStatus() == CacheStatus.NOT_FOUND) {
+            throw new ConcertNotFoundException();
         }
 
         Object lock = locks.computeIfAbsent(concertId, key -> new Object());
 
         synchronized (lock) {
-            cached =
-                concertCacheRepository.findById(concertId);
+            ConcertCacheResult secondCheck = concertCacheRepository.findById(concertId);
 
-            if (cached != null) {
-                return cached;
+            if(secondCheck.cacheStatus() == CacheStatus.HIT) {
+                return secondCheck.concert();
+            }
+
+            if(secondCheck.cacheStatus() == CacheStatus.NOT_FOUND) {
+                throw new ConcertNotFoundException();
             }
             // 여전히 없으면 이 Thread만 DB 조회
-            Concert concert =
-                concertRepository.findById(concertId)
-                    .orElseThrow(
-                        ConcertNotFoundException::new
-                    );
+            Optional<Concert> concertOptional = concertRepository.findById(concertId);
+
+            if(concertOptional.isEmpty()) {
+                concertCacheRepository.saveNotFound(concertId);
+                throw new ConcertNotFoundException();
+            }
+            Concert concert = concertOptional.get();
 
             ConcertResponse response =
                 ConcertResponse.from(concert);
