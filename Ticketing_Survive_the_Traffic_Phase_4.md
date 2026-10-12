@@ -1111,11 +1111,11 @@ export default function () {
 
 # 39. Before / After 비교
 
-| Scenario | Cache |           RPS |  Avg |     p95 |     p99 | Error | DB Query |
-|---|---|--------------:|-----:|--------:|--------:|------:|---------:|
-| Concert Detail | OFF | 6302.77 req/s | 7.83 | 19.02ms | 39.03ms |     0 |  189,115 |
-| Concert Detail | ON Cold |               |      |         |         |       |          |
-| Concert Detail | ON Warm |               |      |         |         |       |          |
+| Scenario | Cache |            RPS |  Avg |     p95 |     p99 | Error | DB Query |
+|---|---|---------------:|-----:|--------:|--------:|------:|---------:|
+| Concert Detail | OFF |  6302.77 req/s | 7.83 | 19.02ms | 39.03ms |     0 |  189,115 |
+| Concert Detail | ON Cold |                |      |         |         |       |       10 |
+| Concert Detail | ON Warm | 15911.51 req/s | 3.06 |  6.36ms | 11.01ms |     0 |        1 |
 
 ---
 
