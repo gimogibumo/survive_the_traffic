@@ -39,4 +39,12 @@ public class Concert {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
+    public void update(String title,
+        LocalDateTime reservationOpenAt,
+        LocalDateTime concertAt) {
+        this.title = title;
+        this.reservationOpenAt = reservationOpenAt;
+        this.concertAt = concertAt;
+    }
+
 }
