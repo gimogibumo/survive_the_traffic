@@ -8,7 +8,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.survive_the_traffic.queue.dto.QueueStatusResponse;
 import com.survive_the_traffic.queue.dto.WaitingQueueResponse;
+import com.survive_the_traffic.queue.entitiy.QueueStatus;
 import com.survive_the_traffic.queue.service.WaitingQueueService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -80,4 +82,59 @@ class WaitingQueueControllerTest {
             .andExpect(jsonPath("$.waitingCount").value(3));
     }
 
+    @Test
+    void queue_상태를_조회한다() throws Exception {
+
+        // given
+        QueueStatusResponse response =
+            new QueueStatusResponse(
+                1L,
+                10L,
+                QueueStatus.WAITING,
+                5L,
+                100L
+            );
+
+        given(
+            waitingQueueService.getStatus(1L, 10L)
+        ).willReturn(response);
+
+        // when & then
+        mockMvc.perform(
+                get("/api/queues/1/status")
+                    .param("userId", "10")
+            )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.concertId").value(1))
+            .andExpect(jsonPath("$.userId").value(10))
+            .andExpect(jsonPath("$.status").value("WAITING"))
+            .andExpect(jsonPath("$.position").value(5))
+            .andExpect(jsonPath("$.waitingCount").value(100));
+    }
+
+    @Test
+    void admitted_사용자는_position이_null이다() throws Exception {
+
+        QueueStatusResponse response =
+            new QueueStatusResponse(
+                1L,
+                10L,
+                QueueStatus.ADMITTED,
+                null,
+                50L
+            );
+
+        given(
+            waitingQueueService.getStatus(1L, 10L)
+        ).willReturn(response);
+
+        mockMvc.perform(
+                get("/api/queues/1/status")
+                    .param("userId", "10")
+            )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value("ADMITTED"))
+            .andExpect(jsonPath("$.position").isEmpty())
+            .andExpect(jsonPath("$.waitingCount").value(50));
+    }
 }

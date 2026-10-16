@@ -1,5 +1,6 @@
 package com.survive_the_traffic.queue.controller;
 
+import com.survive_the_traffic.queue.dto.QueueStatusResponse;
 import com.survive_the_traffic.queue.dto.WaitingQueueJoinRequest;
 import com.survive_the_traffic.queue.dto.WaitingQueueResponse;
 import com.survive_the_traffic.queue.service.WaitingQueueService;
@@ -42,5 +43,13 @@ public class WaitingQueueController {
             waitingQueueService.getPosition(concertId, userId);
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{concertId}/status")
+    public ResponseEntity<QueueStatusResponse> getStatus(
+        @PathVariable Long concertId,
+        @RequestParam Long userId
+    ) {
+        return ResponseEntity.ok(waitingQueueService.getStatus(concertId, userId));
     }
 }

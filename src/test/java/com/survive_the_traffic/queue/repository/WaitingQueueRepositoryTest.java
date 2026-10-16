@@ -23,8 +23,17 @@ class WaitingQueueRepositoryTest {
 
     @AfterEach
     void tearDown() {
-        redisTemplate.delete("queue:waiting:" + CONCERT_ID);
-        redisTemplate.delete("queue:sequence:" + CONCERT_ID);
+        redisTemplate.delete(
+            "queue:waiting:" + CONCERT_ID
+        );
+
+        redisTemplate.delete(
+            "queue:sequence:" + CONCERT_ID
+        );
+
+        redisTemplate.delete(
+            "queue:active-concerts"
+        );
     }
 
     @Test
@@ -94,5 +103,98 @@ class WaitingQueueRepositoryTest {
         assertThat(
             waitingQueueRepository.getRank(CONCERT_ID, 50L)
         ).isEqualTo(1L);
+    }
+
+    @Test
+    void 중복_join은_sequence를_추가로_소비하지_않는다() {
+
+        // given
+        boolean first =
+            waitingQueueRepository.join(
+                CONCERT_ID,
+                10L
+            );
+
+        // when
+        boolean second =
+            waitingQueueRepository.join(
+                CONCERT_ID,
+                10L
+            );
+
+        // then
+        assertThat(first).isTrue();
+        assertThat(second).isFalse();
+
+        String sequence =
+            redisTemplate.opsForValue()
+                .get(
+                    "queue:sequence:" + CONCERT_ID
+                );
+
+        assertThat(sequence)
+            .isEqualTo("1");
+
+        assertThat(
+            waitingQueueRepository.getRank(
+                CONCERT_ID,
+                10L
+            )
+        ).isEqualTo(0L);
+
+        assertThat(
+            waitingQueueRepository.getSize(
+                CONCERT_ID
+            )
+        ).isEqualTo(1L);
+    }
+
+    @Test
+    void 중복_join은_누락된_active_concert를_복구한다() {
+
+        // given
+        waitingQueueRepository.join(
+            CONCERT_ID,
+            10L
+        );
+
+        redisTemplate.opsForSet()
+            .remove(
+                "queue:active-concerts",
+                CONCERT_ID.toString()
+            );
+
+        Boolean before =
+            redisTemplate.opsForSet()
+                .isMember(
+                    "queue:active-concerts",
+                    CONCERT_ID.toString()
+                );
+
+        assertThat(before).isFalse();
+
+        // when
+        boolean added =
+            waitingQueueRepository.join(
+                CONCERT_ID,
+                10L
+            );
+
+        // then
+        assertThat(added).isFalse();
+
+        Boolean after =
+            redisTemplate.opsForSet()
+                .isMember(
+                    "queue:active-concerts",
+                    CONCERT_ID.toString()
+                );
+
+        assertThat(after).isTrue();
+
+        assertThat(
+            redisTemplate.opsForValue()
+                .get("queue:sequence:" + CONCERT_ID)
+        ).isEqualTo("1");
     }
 }

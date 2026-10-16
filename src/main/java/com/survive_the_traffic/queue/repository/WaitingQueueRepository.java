@@ -2,17 +2,28 @@ package com.survive_the_traffic.queue.repository;
 
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
 public class WaitingQueueRepository {
 
-    private static final String WAITING_KEY_PREFIX = "queue:waiting:";
-    private static final String SEQUENCE_KEY_PREFIX = "queue:sequence:";
+    private static final String WAITING_KEY_PREFIX =
+        "queue:waiting:";
+
+    private static final String SEQUENCE_KEY_PREFIX =
+        "queue:sequence:";
+
+    private static final String ACTIVE_CONCERTS_KEY =
+        "queue:active-concerts";
 
     private final StringRedisTemplate redisTemplate;
+
+    @Qualifier("joinWaitingQueueScript")
+    private final RedisScript<List> joinWaitingQueueScript;
 
     private String waitingKey(Long concertId) {
         return WAITING_KEY_PREFIX + concertId;
@@ -22,12 +33,34 @@ public class WaitingQueueRepository {
         return SEQUENCE_KEY_PREFIX + concertId;
     }
 
-    public boolean join(Long concertId, Long userId) {
-        Long sequence = redisTemplate.opsForValue().increment(sequenceKey(concertId));
-        Boolean added = redisTemplate.opsForZSet()
-            .addIfAbsent(waitingKey(concertId),userId.toString(),sequence.doubleValue());
+    public boolean join(
+        Long concertId,
+        Long userId
+    ) {
 
-        return Boolean.TRUE.equals(added);
+        List<?> result = redisTemplate.execute(
+            joinWaitingQueueScript,
+            List.of(
+                sequenceKey(concertId),
+                waitingKey(concertId),
+                ACTIVE_CONCERTS_KEY
+            ),
+            userId.toString(),
+            concertId.toString()
+        );
+
+        if (result == null || result.isEmpty()) {
+            throw new IllegalStateException(
+                "Waiting queue join script returned no result"
+            );
+        }
+
+        long added =
+            Long.parseLong(
+                result.get(0).toString()
+            );
+
+        return added == 1L;
     }
 
     public Long getRank(Long concertId, Long userId) {

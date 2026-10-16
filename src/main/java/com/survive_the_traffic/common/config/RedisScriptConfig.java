@@ -9,10 +9,20 @@ import org.springframework.data.redis.core.script.RedisScript;
 @Configuration
 public class RedisScriptConfig {
 
-    @Bean
+    @Bean("admitUsersScript")
     public RedisScript<List> redisScript() {
         return RedisScript.of(
             new ClassPathResource("redis/admit-users.lua"),
+            List.class
+        );
+    }
+
+    @Bean("joinWaitingQueueScript")
+    public RedisScript<List> joinWaitingQueueScript() {
+        return RedisScript.of(
+            new ClassPathResource(
+                "redis/join-waiting-queue.lua"
+            ),
             List.class
         );
     }
