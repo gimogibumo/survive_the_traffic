@@ -63,10 +63,11 @@ class ReservationServiceTest {
 
         // given
         Long userId = 1L;
+        Long concertId = 1L;
         Long seatId = 101L;
 
         ReservationRequest request =
-            new ReservationRequest(userId, seatId);
+            new ReservationRequest(concertId,userId, seatId);
 
         User user = mock(User.class);
         Seat seat = mock(Seat.class);
@@ -135,10 +136,11 @@ class ReservationServiceTest {
 
         // given
         Long userId = 999L;
+        Long concertId = 1L;
         Long seatId = 101L;
 
         ReservationRequest request =
-            new ReservationRequest(userId, seatId);
+            new ReservationRequest(concertId,userId, seatId);
 
         when(userRepository.findById(userId))
             .thenReturn(Optional.empty());
@@ -164,7 +166,7 @@ class ReservationServiceTest {
         Long seatId = 999L;
 
         ReservationRequest request =
-            new ReservationRequest(userId, seatId);
+            new ReservationRequest(1L,userId, seatId);
 
         User user = mock(User.class);
 
@@ -195,7 +197,7 @@ class ReservationServiceTest {
         Long seatId = 101L;
 
         ReservationRequest request =
-            new ReservationRequest(userId, seatId);
+            new ReservationRequest(1L,userId, seatId);
 
         User user = mock(User.class);
         Seat seat = mock(Seat.class);

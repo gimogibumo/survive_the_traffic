@@ -1,5 +1,6 @@
 package com.survive_the_traffic.queue.repository;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Repository;
@@ -36,5 +37,19 @@ public class WaitingQueueRepository {
 
     public Long getSize(Long concertId) {
         return redisTemplate.opsForZSet().size(waitingKey(concertId));
+    }
+
+    public List<Long> popFirst(Long concertId, Long count) {
+
+        var tuples = redisTemplate.opsForZSet()
+            .popMin(waitingKey(concertId),count);
+
+        if(tuples == null) {
+            return List.of();
+        }
+
+        return tuples.stream()
+            .map(tuple -> Long.valueOf(tuple.getValue()))
+            .toList();
     }
 }

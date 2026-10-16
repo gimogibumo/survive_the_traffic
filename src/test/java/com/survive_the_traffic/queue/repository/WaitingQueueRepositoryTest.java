@@ -3,6 +3,7 @@ package com.survive_the_traffic.queue.repository;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,4 +65,34 @@ class WaitingQueueRepositoryTest {
             .isEqualTo(3L);
     }
 
+    @Test
+    void 앞에서부터_N명의_사용자를_꺼낸다() {
+
+        // given
+        waitingQueueRepository.join(CONCERT_ID, 10L);
+        waitingQueueRepository.join(CONCERT_ID, 20L);
+        waitingQueueRepository.join(CONCERT_ID, 30L);
+        waitingQueueRepository.join(CONCERT_ID, 40L);
+        waitingQueueRepository.join(CONCERT_ID, 50L);
+
+        // when
+        List<Long> popped =
+            waitingQueueRepository.popFirst(CONCERT_ID, 3L);
+
+        // then
+        assertThat(popped)
+            .containsExactly(10L, 20L, 30L);
+
+        assertThat(
+            waitingQueueRepository.getSize(CONCERT_ID)
+        ).isEqualTo(2L);
+
+        assertThat(
+            waitingQueueRepository.getRank(CONCERT_ID, 40L)
+        ).isEqualTo(0L);
+
+        assertThat(
+            waitingQueueRepository.getRank(CONCERT_ID, 50L)
+        ).isEqualTo(1L);
+    }
 }

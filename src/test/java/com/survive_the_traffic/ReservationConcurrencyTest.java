@@ -116,7 +116,7 @@ class ReservationConcurrencyTest {
                         startLatch.await();
 
                         reservationService.createReservation(
-                            new ReservationRequest(userId, seatId)
+                            new ReservationRequest(1L,userId, seatId)
                         );
 
                         successCount.incrementAndGet();
