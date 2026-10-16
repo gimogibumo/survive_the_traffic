@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import com.survive_the_traffic.common.exception.AdmissionRequiredException;
+import com.survive_the_traffic.common.exception.SeatConcertMismatchException;
 import com.survive_the_traffic.payment.domain.PaymentStatus;
 import com.survive_the_traffic.payment.dto.PaymentResponse;
 import com.survive_the_traffic.reservation.domain.ReservationStatus;
@@ -269,5 +270,33 @@ class ReservationControllerTest {
             .andExpect(status().isConflict())
             .andExpect(jsonPath("$.code")
                 .value("RESERVATION_EXPIRED"));
+    }
+
+    @Test
+    void concert와_seat가_일치하지_않으면_400을_반환한다()
+        throws Exception {
+
+        // given
+        given(
+            reservationFacade.createReservation(
+                any(ReservationRequest.class)
+            )
+        ).willThrow(
+            new SeatConcertMismatchException()
+        );
+
+        // when & then
+        mockMvc.perform(
+                post("/api/reservations")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                    {
+                      "concertId": 1,
+                      "userId": 10,
+                      "seatId": 20
+                    }
+                    """)
+            )
+            .andExpect(status().isBadRequest());
     }
 }

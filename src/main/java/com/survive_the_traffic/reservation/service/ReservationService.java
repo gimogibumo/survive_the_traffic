@@ -1,5 +1,6 @@
 package com.survive_the_traffic.reservation.service;
 
+import com.survive_the_traffic.common.exception.SeatConcertMismatchException;
 import com.survive_the_traffic.payment.domain.Payment;
 import com.survive_the_traffic.payment.dto.PaymentResponse;
 import com.survive_the_traffic.payment.repository.PaymentRepository;
@@ -37,6 +38,11 @@ public class ReservationService {
 
         User user = userRepository.findById(request.userId()).orElseThrow(UserNotFoundException::new);
         Seat seat = seatRepository.findByIdWithPessimisticLock(request.seatId()).orElseThrow(SeatNotFoundException::new);
+
+        if(!seat.getConcert().getId().equals(request.concertId())) {
+            throw new SeatConcertMismatchException();
+        }
+
         seat.hold();
         seatRepository.save(seat);
 

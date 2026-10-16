@@ -31,4 +31,18 @@ public class GlobalExceptionHandler {
                 )
             );
     }
+
+    @ExceptionHandler(SeatConcertMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleSeatConcertMismatch(
+        SeatConcertMismatchException e
+    ) {
+        return ResponseEntity
+            .badRequest()
+            .body(
+                new ErrorResponse(
+                    "SEAT_CONCERT_MISMATCH",
+                    e.getMessage()
+                )
+            );
+    }
 }
