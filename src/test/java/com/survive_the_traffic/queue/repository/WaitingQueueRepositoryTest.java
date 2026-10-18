@@ -1159,10 +1159,6 @@ class WaitingQueueRepositoryTest {
             admittedKey()
         );
 
-        redisTemplate.delete(
-            reservingKey()
-        );
-
 
         /*
          * queue:active-concerts 전체 SET을 삭제하지 않고
@@ -1201,11 +1197,6 @@ class WaitingQueueRepositoryTest {
     }
 
 
-    private String reservingKey() {
-
-        return "queue:reserving:"
-            + CONCERT_ID;
-    }
 
 
     private String activeConcertsKey() {
