@@ -1,9 +1,11 @@
 package com.survive_the_traffic.queue.service;
 
 import com.survive_the_traffic.queue.dto.QueueStatusResponse;
+import com.survive_the_traffic.queue.repository.QueueStatusRepository;
+import com.survive_the_traffic.queue.repository.QueueStatusResult;
+import com.survive_the_traffic.queue.repository.WaitingQueueJoinResult;
 import com.survive_the_traffic.queue.dto.WaitingQueueResponse;
-import com.survive_the_traffic.queue.entitiy.QueueStatus;
-import com.survive_the_traffic.queue.repository.ActiveConcertRepository;
+import com.survive_the_traffic.queue.entity.QueueStatus;
 import com.survive_the_traffic.queue.repository.AdmittedQueueRepository;
 import com.survive_the_traffic.queue.repository.WaitingQueueRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,21 +17,16 @@ public class WaitingQueueService {
 
     private final WaitingQueueRepository waitingQueueRepository;
     private final AdmittedQueueRepository admittedQueueRepository;
+    private final QueueStatusRepository queueStatusRepository;
 
     public WaitingQueueResponse join(Long concertId, Long userId) {
 
-        waitingQueueRepository.join(concertId, userId);
+        WaitingQueueJoinResult result = waitingQueueRepository.join(concertId, userId);
 
-        Long rank = waitingQueueRepository.getRank(concertId, userId);
 
-        if(rank == null) {
-            throw new IllegalStateException("Waiting Queue join failed");
-        }
-
-        Long waitingCount = waitingQueueRepository.getSize(concertId);
 
         return new WaitingQueueResponse(
-            concertId,userId,rank+1,waitingCount
+            concertId,userId,result.rank()+1,result.waitingCount()
         );
     }
 
@@ -48,38 +45,28 @@ public class WaitingQueueService {
         );
     }
 
-    public QueueStatusResponse getStatus(Long concertId, Long userId) {
+    public QueueStatusResponse getStatus(
+        Long concertId,
+        Long userId
+    ) {
 
-        Long waitingCount = waitingQueueRepository.getSize(concertId);
-
-        if(admittedQueueRepository.isAdmitted(concertId,userId)) {
-            return new QueueStatusResponse(
+        QueueStatusResult result =
+            queueStatusRepository.getStatus(
                 concertId,
-                userId,
-                QueueStatus.ADMITTED,
-                null,
-                waitingCount
+                userId
             );
-        }
 
-        Long rank = waitingQueueRepository.getRank(concertId, userId);
-
-        if(rank != null) {
-            return new QueueStatusResponse(
-                concertId,
-                userId,
-                QueueStatus.WAITING,
-                rank+1,
-                waitingCount
-            );
-        }
+        Long position =
+            result.rank() == null
+                ? null
+                : result.rank() + 1;
 
         return new QueueStatusResponse(
             concertId,
             userId,
-            QueueStatus.NOT_JOINED,
-            null,
-            waitingCount
+            result.status(),
+            position,
+            result.waitingCount()
         );
     }
 }

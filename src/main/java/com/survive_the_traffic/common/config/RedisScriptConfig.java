@@ -27,4 +27,36 @@ public class RedisScriptConfig {
         );
     }
 
+    @Bean("queueStatusScript")
+    public RedisScript<List> queueStatusScript() {
+        return RedisScript.of(
+            new ClassPathResource(
+                "redis/queue-status.lua"
+            ),
+            List.class
+        );
+    }
+
+    @Bean("claimAdmissionScript")
+    public RedisScript<List> claimAdmissionScript() {
+
+        return RedisScript.of(
+            new ClassPathResource(
+                "redis/claim-admission.lua"
+            ),
+            List.class
+        );
+    }
+
+    @Bean("restoreAdmissionScript")
+    public RedisScript<Long> restoreAdmissionScript() {
+
+        return RedisScript.of(
+            new ClassPathResource(
+                "redis/restore-admission.lua"
+            ),
+            Long.class
+        );
+    }
+
 }

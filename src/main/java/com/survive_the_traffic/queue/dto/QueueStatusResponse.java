@@ -1,6 +1,6 @@
 package com.survive_the_traffic.queue.dto;
 
-import com.survive_the_traffic.queue.entitiy.QueueStatus;
+import com.survive_the_traffic.queue.entity.QueueStatus;
 
 public record QueueStatusResponse(
     Long concertId,

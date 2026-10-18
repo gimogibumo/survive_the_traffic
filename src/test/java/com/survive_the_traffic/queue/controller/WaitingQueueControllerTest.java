@@ -1,6 +1,5 @@
 package com.survive_the_traffic.queue.controller;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -10,7 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.survive_the_traffic.queue.dto.QueueStatusResponse;
 import com.survive_the_traffic.queue.dto.WaitingQueueResponse;
-import com.survive_the_traffic.queue.entitiy.QueueStatus;
+import com.survive_the_traffic.queue.entity.QueueStatus;
 import com.survive_the_traffic.queue.service.WaitingQueueService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -77,6 +77,10 @@ class ReservationServiceTest {
 
         User user = mock(User.class);
         Seat seat = mock(Seat.class);
+        Concert concert = mock(Concert.class);
+
+        given(concert.getId()).willReturn(concertId);
+        given(seat.getConcert()).willReturn(concert);
 
         when(userRepository.findById(userId))
             .thenReturn(Optional.of(user));
@@ -206,7 +210,11 @@ class ReservationServiceTest {
             new ReservationRequest(1L,userId, seatId);
 
         User user = mock(User.class);
+        Concert concert = mock(Concert.class);
         Seat seat = mock(Seat.class);
+
+        given(concert.getId()).willReturn(1L);
+        given(seat.getConcert()).willReturn(concert);
 
         when(userRepository.findById(userId))
             .thenReturn(Optional.of(user));

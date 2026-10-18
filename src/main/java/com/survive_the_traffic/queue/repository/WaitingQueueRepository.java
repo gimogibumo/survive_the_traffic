@@ -33,7 +33,7 @@ public class WaitingQueueRepository {
         return SEQUENCE_KEY_PREFIX + concertId;
     }
 
-    public boolean join(
+    public WaitingQueueJoinResult join(
         Long concertId,
         Long userId
     ) {
@@ -55,12 +55,22 @@ public class WaitingQueueRepository {
             );
         }
 
-        long added =
+        boolean added =
             Long.parseLong(
                 result.get(0).toString()
+            ) == 1L;
+
+        long rank =
+            Long.parseLong(
+                result.get(1).toString()
             );
 
-        return added == 1L;
+        long waitingCount =
+            Long.parseLong(
+                result.get(2).toString()
+            );
+
+        return new WaitingQueueJoinResult(added,rank,waitingCount);
     }
 
     public Long getRank(Long concertId, Long userId) {

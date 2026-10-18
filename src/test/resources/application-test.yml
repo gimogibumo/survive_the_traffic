@@ -1,0 +1,10 @@
+spring:
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 15
+
+queue:
+  admission-worker:
+    enabled: false

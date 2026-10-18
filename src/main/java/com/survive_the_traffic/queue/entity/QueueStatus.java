@@ -1,4 +1,4 @@
-package com.survive_the_traffic.queue.entitiy;
+package com.survive_the_traffic.queue.entity;
 
 public enum QueueStatus {
     WAITING,

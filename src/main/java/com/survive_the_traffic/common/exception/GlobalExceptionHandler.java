@@ -45,4 +45,17 @@ public class GlobalExceptionHandler {
                 )
             );
     }
+
+    @ExceptionHandler(
+        ReservationAlreadyInProgressException.class
+    )
+    public ResponseEntity<ErrorResponse>
+    handleReservationAlreadyInProgress(
+        ReservationAlreadyInProgressException e
+    ) {
+
+        return ResponseEntity
+            .status(HttpStatus.CONFLICT)
+            .body(new ErrorResponse("RESERVATION_IN_ALREADY_PROGRESS",e.getMessage()));
+    }
 }

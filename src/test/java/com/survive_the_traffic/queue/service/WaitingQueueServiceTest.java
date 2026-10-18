@@ -1,17 +1,17 @@
 package com.survive_the_traffic.queue.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.when;
 
+import com.survive_the_traffic.queue.entity.QueueStatus;
 import com.survive_the_traffic.queue.dto.QueueStatusResponse;
 import com.survive_the_traffic.queue.dto.WaitingQueueResponse;
-import com.survive_the_traffic.queue.entitiy.QueueStatus;
-import com.survive_the_traffic.queue.repository.ActiveConcertRepository;
-import com.survive_the_traffic.queue.repository.AdmittedQueueRepository;
+import com.survive_the_traffic.queue.repository.QueueStatusRepository;
+import com.survive_the_traffic.queue.repository.QueueStatusResult;
+import com.survive_the_traffic.queue.repository.WaitingQueueJoinResult;
 import com.survive_the_traffic.queue.repository.WaitingQueueRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,55 +26,30 @@ class WaitingQueueServiceTest {
     WaitingQueueRepository waitingQueueRepository;
 
     @Mock
-    AdmittedQueueRepository admittedQueueRepository;
+    QueueStatusRepository queueStatusRepository;
 
     @InjectMocks
     WaitingQueueService waitingQueueService;
 
     @Test
     void redis_rank를_사용자_position으로_변환한다() {
+
+        // given
         Long concertId = 1L;
         Long userId = 20L;
 
-        when(waitingQueueRepository.join(concertId,userId)).thenReturn(true);
-        when(waitingQueueRepository.getRank(concertId, userId))
-            .thenReturn(1L);
-        when(waitingQueueRepository.getSize(concertId))
-            .thenReturn(3L);
-
-        WaitingQueueResponse response =
-            waitingQueueService.join(concertId, userId);
-
-        assertThat(response.position()).isEqualTo(2L);
-        assertThat(response.waitingCount()).isEqualTo(3L);
-    }
-
-    @Test
-    void 대기열에_join하면_concert를_active로_등록한다() {
-
-        // given
-        Long concertId = 1L;
-        Long userId = 10L;
-
         given(
             waitingQueueRepository.join(
                 concertId,
                 userId
             )
-        ).willReturn(true);
-
-        given(
-            waitingQueueRepository.getRank(
-                concertId,
-                userId
+        ).willReturn(
+            new WaitingQueueJoinResult(
+                true,
+                1L,
+                3L
             )
-        ).willReturn(0L);
-
-        given(
-            waitingQueueRepository.getSize(
-                concertId
-            )
-        ).willReturn(1L);
+        );
 
         // when
         WaitingQueueResponse response =
@@ -84,55 +59,38 @@ class WaitingQueueServiceTest {
             );
 
         // then
+        assertThat(response.concertId())
+            .isEqualTo(concertId);
+
+        assertThat(response.userId())
+            .isEqualTo(userId);
 
         assertThat(response.position())
-            .isEqualTo(1L);
+            .isEqualTo(2L);
 
         assertThat(response.waitingCount())
-            .isEqualTo(1L);
-
-    }
-
-    @Test
-    void 이미_waiting인_사용자가_다시_join해도_concert는_activate한다() {
-
-        // given
-        Long concertId = 1L;
-        Long userId = 10L;
-
-        given(
-            waitingQueueRepository.join(
-                concertId,
-                userId
-            )
-        ).willReturn(false);
-
-        given(
-            waitingQueueRepository.getRank(
-                concertId,
-                userId
-            )
-        ).willReturn(2L);
-
-        given(
-            waitingQueueRepository.getSize(
-                concertId
-            )
-        ).willReturn(10L);
-
-        // when
-        WaitingQueueResponse response =
-            waitingQueueService.join(
-                concertId,
-                userId
-            );
-
-        // then
-        assertThat(response.position())
             .isEqualTo(3L);
 
-        assertThat(response.waitingCount())
-            .isEqualTo(10L);
+        then(waitingQueueRepository)
+            .should()
+            .join(concertId, userId);
+
+        /*
+         * join 이후 다시 Redis 상태를 조회하면
+         * Worker와 race가 생길 수 있으므로 호출하면 안 된다.
+         */
+        then(waitingQueueRepository)
+            .should(never())
+            .getRank(
+                anyLong(),
+                anyLong()
+            );
+
+        then(waitingQueueRepository)
+            .should(never())
+            .getSize(
+                anyLong()
+            );
     }
 
     @Test
@@ -140,30 +98,42 @@ class WaitingQueueServiceTest {
 
         // given
         given(
-            admittedQueueRepository.isAdmitted(1L, 10L)
-        ).willReturn(false);
-
-        given(
-            waitingQueueRepository.getRank(1L, 10L)
-        ).willReturn(4L);
-
-        given(
-            waitingQueueRepository.getSize(1L)
-        ).willReturn(100L);
+            queueStatusRepository.getStatus(
+                1L,
+                10L
+            )
+        ).willReturn(
+            new QueueStatusResult(
+                QueueStatus.WAITING,
+                4L,
+                100L
+            )
+        );
 
         // when
         QueueStatusResponse response =
-            waitingQueueService.getStatus(1L, 10L);
+            waitingQueueService.getStatus(
+                1L,
+                10L
+            );
 
         // then
         assertThat(response.status())
             .isEqualTo(QueueStatus.WAITING);
 
+        /*
+         * Redis rank = 4
+         * 사용자 position = 5
+         */
         assertThat(response.position())
             .isEqualTo(5L);
 
         assertThat(response.waitingCount())
             .isEqualTo(100L);
+
+        then(queueStatusRepository)
+            .should()
+            .getStatus(1L, 10L);
     }
 
     @Test
@@ -171,16 +141,24 @@ class WaitingQueueServiceTest {
 
         // given
         given(
-            admittedQueueRepository.isAdmitted(1L, 10L)
-        ).willReturn(true);
-
-        given(
-            waitingQueueRepository.getSize(1L)
-        ).willReturn(50L);
+            queueStatusRepository.getStatus(
+                1L,
+                10L
+            )
+        ).willReturn(
+            new QueueStatusResult(
+                QueueStatus.ADMITTED,
+                null,
+                50L
+            )
+        );
 
         // when
         QueueStatusResponse response =
-            waitingQueueService.getStatus(1L, 10L);
+            waitingQueueService.getStatus(
+                1L,
+                10L
+            );
 
         // then
         assertThat(response.status())
@@ -189,9 +167,8 @@ class WaitingQueueServiceTest {
         assertThat(response.position())
             .isNull();
 
-        then(waitingQueueRepository)
-            .should(never())
-            .getRank(1L, 10L);
+        assertThat(response.waitingCount())
+            .isEqualTo(50L);
     }
 
     @Test
@@ -199,20 +176,24 @@ class WaitingQueueServiceTest {
 
         // given
         given(
-            admittedQueueRepository.isAdmitted(1L, 10L)
-        ).willReturn(false);
-
-        given(
-            waitingQueueRepository.getRank(1L, 10L)
-        ).willReturn(null);
-
-        given(
-            waitingQueueRepository.getSize(1L)
-        ).willReturn(50L);
+            queueStatusRepository.getStatus(
+                1L,
+                10L
+            )
+        ).willReturn(
+            new QueueStatusResult(
+                QueueStatus.NOT_JOINED,
+                null,
+                50L
+            )
+        );
 
         // when
         QueueStatusResponse response =
-            waitingQueueService.getStatus(1L, 10L);
+            waitingQueueService.getStatus(
+                1L,
+                10L
+            );
 
         // then
         assertThat(response.status())
@@ -220,7 +201,8 @@ class WaitingQueueServiceTest {
 
         assertThat(response.position())
             .isNull();
-    }
 
-    
+        assertThat(response.waitingCount())
+            .isEqualTo(50L);
+    }
 }
