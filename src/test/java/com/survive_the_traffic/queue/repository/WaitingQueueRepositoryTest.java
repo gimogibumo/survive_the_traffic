@@ -2,8 +2,11 @@ package com.survive_the_traffic.queue.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.survive_the_traffic.queue.dto.WaitingQueueJoinResult;
 import com.survive_the_traffic.queue.entity.QueueStatus;
+import com.survive_the_traffic.queue.entity.WaitingQueueJoinStatus;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -242,53 +245,109 @@ class WaitingQueueRepositoryTest {
 
 
         /*
-         * pop 직전 테스트 fixture가 우리가 의도한 상태인지 확인한다.
+         * popFirst()를 호출하기 직전에
+         * Redis ZSET 자체를 직접 검사한다.
          *
-         * Worker가 테스트 중 개입한다면
-         * 여기에서 바로 실패하므로 원인 파악도 쉬워진다.
+         * 여기서 이미 값이 사라져 있다면
+         * popFirst 문제가 아니라 다른 실행 주체가
+         * queue를 변경한 것이다.
          */
+        Set<String> waitingBeforePop =
+            redisTemplate
+                .opsForZSet()
+                .range(
+                    waitingKey(),
+                    0,
+                    -1
+                );
+
+
+        assertThat(waitingBeforePop)
+            .isNotNull();
+
+
+        assertThat(waitingBeforePop)
+            .containsExactly(
+                "10",
+                "20",
+                "30",
+                "40",
+                "50"
+            );
+
+
         assertThat(
-            waitingQueueRepository
-                .getSize(
-                    CONCERT_ID
-                )
+            waitingQueueRepository.getSize(
+                CONCERT_ID
+            )
         ).isEqualTo(
             5L
         );
 
 
         assertThat(
-            waitingQueueRepository
-                .getRank(
-                    CONCERT_ID,
-                    10L
-                )
+            waitingQueueRepository.getRank(
+                CONCERT_ID,
+                10L
+            )
         ).isEqualTo(
             0L
         );
 
 
         assertThat(
-            waitingQueueRepository
-                .getRank(
-                    CONCERT_ID,
-                    20L
-                )
+            waitingQueueRepository.getRank(
+                CONCERT_ID,
+                20L
+            )
         ).isEqualTo(
             1L
         );
 
 
+        assertThat(
+            waitingQueueRepository.getRank(
+                CONCERT_ID,
+                30L
+            )
+        ).isEqualTo(
+            2L
+        );
+
+
+        assertThat(
+            waitingQueueRepository.getRank(
+                CONCERT_ID,
+                40L
+            )
+        ).isEqualTo(
+            3L
+        );
+
+
+        assertThat(
+            waitingQueueRepository.getRank(
+                CONCERT_ID,
+                50L
+            )
+        ).isEqualTo(
+            4L
+        );
+
+
         // when
         List<Long> popped =
-            waitingQueueRepository
-                .popFirst(
-                    CONCERT_ID,
-                    3L
-                );
+            waitingQueueRepository.popFirst(
+                CONCERT_ID,
+                3L
+            );
 
 
         // then
+        assertThat(popped)
+            .isNotNull();
+
+
         assertThat(popped)
             .containsExactly(
                 10L,
@@ -297,33 +356,51 @@ class WaitingQueueRepositoryTest {
             );
 
 
+        Set<String> waitingAfterPop =
+            redisTemplate
+                .opsForZSet()
+                .range(
+                    waitingKey(),
+                    0,
+                    -1
+                );
+
+
+        assertThat(waitingAfterPop)
+            .isNotNull();
+
+
+        assertThat(waitingAfterPop)
+            .containsExactly(
+                "40",
+                "50"
+            );
+
+
         assertThat(
-            waitingQueueRepository
-                .getSize(
-                    CONCERT_ID
-                )
+            waitingQueueRepository.getSize(
+                CONCERT_ID
+            )
         ).isEqualTo(
             2L
         );
 
 
         assertThat(
-            waitingQueueRepository
-                .getRank(
-                    CONCERT_ID,
-                    40L
-                )
+            waitingQueueRepository.getRank(
+                CONCERT_ID,
+                40L
+            )
         ).isEqualTo(
             0L
         );
 
 
         assertThat(
-            waitingQueueRepository
-                .getRank(
-                    CONCERT_ID,
-                    50L
-                )
+            waitingQueueRepository.getRank(
+                CONCERT_ID,
+                50L
+            )
         ).isEqualTo(
             1L
         );
@@ -596,6 +673,18 @@ class WaitingQueueRepositoryTest {
             1L
         );
 
+        assertThat(
+            first.status()
+        ).isEqualTo(
+            WaitingQueueJoinStatus.JOINED
+        );
+
+        assertThat(
+            second.status()
+        ).isEqualTo(
+            WaitingQueueJoinStatus.ALREADY_WAITING
+        );
+
 
         String sequence =
             redisTemplate
@@ -791,6 +880,260 @@ class WaitingQueueRepositoryTest {
         assertThat(
             result.rank()
         ).isNull();
+    }
+
+    @Test
+    void admitted_사용자가_다시_join해도_waiting에_들어가지_않는다() {
+
+        // given
+        Long userId =
+            10L;
+
+
+        WaitingQueueJoinResult firstJoin =
+            waitingQueueRepository.join(
+                CONCERT_ID,
+                userId
+            );
+
+
+        assertThat(
+            firstJoin.status()
+        ).isEqualTo(
+            WaitingQueueJoinStatus.JOINED
+        );
+
+
+        assertThat(
+            firstJoin.added()
+        ).isTrue();
+
+
+        List<Long> admittedUsers =
+            queueAdmissionRepository.admit(
+                CONCERT_ID,
+                1L
+            );
+
+
+        assertThat(
+            admittedUsers
+        ).containsExactly(
+            userId
+        );
+
+
+        /*
+         * admission 이후 waiting에서는 제거된다.
+         */
+        assertThat(
+            waitingQueueRepository.getRank(
+                CONCERT_ID,
+                userId
+            )
+        ).isNull();
+
+
+        assertThat(
+            waitingQueueRepository.getSize(
+                CONCERT_ID
+            )
+        ).isZero();
+
+
+        Double admittedScoreBeforeRejoin =
+            redisTemplate
+                .opsForZSet()
+                .score(
+                    admittedKey(),
+                    userId.toString()
+                );
+
+
+        assertThat(
+            admittedScoreBeforeRejoin
+        ).isNotNull();
+
+
+        /*
+         * when
+         *
+         * 이미 admission을 받은 사용자가 다시 join한다.
+         */
+        WaitingQueueJoinResult secondJoin =
+            waitingQueueRepository.join(
+                CONCERT_ID,
+                userId
+            );
+
+
+        /*
+         * then
+         *
+         * 신규 join으로 판단하면 안 된다.
+         */
+        assertThat(
+            secondJoin.status()
+        ).isEqualTo(
+            WaitingQueueJoinStatus.ALREADY_ADMITTED
+        );
+
+
+        assertThat(
+            secondJoin.added()
+        ).isFalse();
+
+
+        assertThat(
+            secondJoin.rank()
+        ).isEqualTo(
+            -1L
+        );
+
+
+        assertThat(
+            secondJoin.waitingCount()
+        ).isZero();
+
+
+        /*
+         * waiting queue에는 재등록되지 않는다.
+         */
+        assertThat(
+            waitingQueueRepository.getRank(
+                CONCERT_ID,
+                userId
+            )
+        ).isNull();
+
+
+        assertThat(
+            waitingQueueRepository.getSize(
+                CONCERT_ID
+            )
+        ).isZero();
+
+
+        /*
+         * 기존 admission은 그대로 유지된다.
+         */
+        Double admittedScoreAfterRejoin =
+            redisTemplate
+                .opsForZSet()
+                .score(
+                    admittedKey(),
+                    userId.toString()
+                );
+
+
+        assertThat(
+            admittedScoreAfterRejoin
+        ).isNotNull();
+
+
+        assertThat(
+            admittedScoreAfterRejoin
+        ).isEqualTo(
+            admittedScoreBeforeRejoin
+        );
+    }
+
+
+    @Test
+    void 만료된_admission_사용자는_다시_waiting에_join할_수_있다() {
+
+        // given
+        Long userId =
+            10L;
+
+
+        redisTemplate
+            .opsForZSet()
+            .add(
+                admittedKey(),
+                userId.toString(),
+                System.currentTimeMillis()
+                    - 1_000
+            );
+
+
+        Double expiredAdmission =
+            redisTemplate
+                .opsForZSet()
+                .score(
+                    admittedKey(),
+                    userId.toString()
+                );
+
+
+        assertThat(
+            expiredAdmission
+        ).isNotNull();
+
+
+        // when
+        WaitingQueueJoinResult result =
+            waitingQueueRepository.join(
+                CONCERT_ID,
+                userId
+            );
+
+
+        // then
+        assertThat(
+            result.status()
+        ).isEqualTo(
+            WaitingQueueJoinStatus.JOINED
+        );
+
+
+        assertThat(
+            result.added()
+        ).isTrue();
+
+
+        assertThat(
+            result.rank()
+        ).isEqualTo(
+            0L
+        );
+
+
+        assertThat(
+            result.waitingCount()
+        ).isEqualTo(
+            1L
+        );
+
+
+        /*
+         * stale admitted entry는 제거되어야 한다.
+         */
+        Double admittedAfterJoin =
+            redisTemplate
+                .opsForZSet()
+                .score(
+                    admittedKey(),
+                    userId.toString()
+                );
+
+
+        assertThat(
+            admittedAfterJoin
+        ).isNull();
+
+
+        /*
+         * 대신 waiting에는 존재해야 한다.
+         */
+        assertThat(
+            waitingQueueRepository.getRank(
+                CONCERT_ID,
+                userId
+            )
+        ).isEqualTo(
+            0L
+        );
     }
 
 

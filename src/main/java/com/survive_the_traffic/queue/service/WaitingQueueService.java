@@ -1,11 +1,10 @@
 package com.survive_the_traffic.queue.service;
 
 import com.survive_the_traffic.queue.dto.QueueStatusResponse;
+import com.survive_the_traffic.queue.dto.WaitingQueueJoinResult;
 import com.survive_the_traffic.queue.repository.QueueStatusRepository;
 import com.survive_the_traffic.queue.repository.QueueStatusResult;
-import com.survive_the_traffic.queue.repository.WaitingQueueJoinResult;
 import com.survive_the_traffic.queue.dto.WaitingQueueResponse;
-import com.survive_the_traffic.queue.entity.QueueStatus;
 import com.survive_the_traffic.queue.repository.AdmittedQueueRepository;
 import com.survive_the_traffic.queue.repository.WaitingQueueRepository;
 import lombok.RequiredArgsConstructor;

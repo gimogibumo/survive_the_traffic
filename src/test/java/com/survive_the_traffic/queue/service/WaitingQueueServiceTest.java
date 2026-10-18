@@ -6,12 +6,12 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
 
+import com.survive_the_traffic.queue.dto.WaitingQueueJoinResult;
 import com.survive_the_traffic.queue.entity.QueueStatus;
 import com.survive_the_traffic.queue.dto.QueueStatusResponse;
 import com.survive_the_traffic.queue.dto.WaitingQueueResponse;
 import com.survive_the_traffic.queue.repository.QueueStatusRepository;
 import com.survive_the_traffic.queue.repository.QueueStatusResult;
-import com.survive_the_traffic.queue.repository.WaitingQueueJoinResult;
 import com.survive_the_traffic.queue.repository.WaitingQueueRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -5,19 +5,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
 import com.survive_the_traffic.common.exception.AdmissionRequiredException;
-import com.survive_the_traffic.queue.dto.AdmissionClaimResult;
-import com.survive_the_traffic.queue.entity.AdmissionClaimStatus;
-import com.survive_the_traffic.queue.entity.AdmissionRestoreStatus;
 import com.survive_the_traffic.queue.service.QueueAdmissionService;
 import com.survive_the_traffic.reservation.dto.ReservationRequest;
 import com.survive_the_traffic.reservation.dto.ReservationResponse;
-import com.survive_the_traffic.common.exception.ReservationAlreadyInProgressException;
-import com.survive_the_traffic.reservation.service.ReservationService;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -38,9 +31,11 @@ class ReservationFacadeTest {
     private QueueAdmissionService
         queueAdmissionService;
 
+
     @Mock
     private ReservationService
         reservationService;
+
 
     @InjectMocks
     private ReservationFacade
@@ -48,7 +43,7 @@ class ReservationFacadeTest {
 
 
     @Test
-    void admitted_사용자는_claim후_예약할_수_있다() {
+    void admitted_사용자는_예약할_수_있다() {
 
         // given
         ReservationRequest request =
@@ -67,17 +62,12 @@ class ReservationFacadeTest {
 
         given(
             queueAdmissionService
-                .claim(
+                .isAdmitted(
                     CONCERT_ID,
                     USER_ID
                 )
         ).willReturn(
-            new AdmissionClaimResult(
-                AdmissionClaimStatus
-                    .CLAIMED,
-                System.currentTimeMillis()
-                    + 300_000
-            )
+            true
         );
 
 
@@ -91,15 +81,6 @@ class ReservationFacadeTest {
         );
 
 
-        given(
-            queueAdmissionService
-                .complete(
-                    CONCERT_ID,
-                    USER_ID
-                )
-        ).willReturn(true);
-
-
         // when
         ReservationResponse actualResponse =
             reservationFacade
@@ -109,15 +90,16 @@ class ReservationFacadeTest {
 
 
         // then
-        assertThat(actualResponse)
-            .isSameAs(
-                expectedResponse
-            );
+        assertThat(
+            actualResponse
+        ).isSameAs(
+            expectedResponse
+        );
 
 
         then(queueAdmissionService)
             .should()
-            .claim(
+            .isAdmitted(
                 CONCERT_ID,
                 USER_ID
             );
@@ -131,19 +113,11 @@ class ReservationFacadeTest {
 
 
         then(queueAdmissionService)
-            .should()
-            .complete(
-                CONCERT_ID,
-                USER_ID
-            );
+            .shouldHaveNoMoreInteractions();
 
 
-        then(queueAdmissionService)
-            .should(never())
-            .restore(
-                CONCERT_ID,
-                USER_ID
-            );
+        then(reservationService)
+            .shouldHaveNoMoreInteractions();
     }
 
 
@@ -161,28 +135,32 @@ class ReservationFacadeTest {
 
         given(
             queueAdmissionService
-                .claim(
+                .isAdmitted(
                     CONCERT_ID,
                     USER_ID
                 )
         ).willReturn(
-            new AdmissionClaimResult(
-                AdmissionClaimStatus
-                    .NOT_ADMITTED,
-                null
-            )
+            false
         );
 
 
         // when + then
         assertThatThrownBy(
-            () -> reservationFacade
-                .createReservation(
-                    request
-                )
-        )
-            .isInstanceOf(
-                AdmissionRequiredException.class
+            () ->
+                reservationFacade
+                    .createReservation(
+                        request
+                    )
+        ).isInstanceOf(
+            AdmissionRequiredException.class
+        );
+
+
+        then(queueAdmissionService)
+            .should()
+            .isAdmitted(
+                CONCERT_ID,
+                USER_ID
             );
 
 
@@ -191,85 +169,12 @@ class ReservationFacadeTest {
 
 
         then(queueAdmissionService)
-            .should(never())
-            .complete(
-                CONCERT_ID,
-                USER_ID
-            );
-
-
-        then(queueAdmissionService)
-            .should(never())
-            .restore(
-                CONCERT_ID,
-                USER_ID
-            );
+            .shouldHaveNoMoreInteractions();
     }
 
 
     @Test
-    void 이미_다른_예약이_admission을_사용중이면_예약할_수_없다() {
-
-        // given
-        ReservationRequest request =
-            new ReservationRequest(
-                CONCERT_ID,
-                USER_ID,
-                100L
-            );
-
-
-        given(
-            queueAdmissionService
-                .claim(
-                    CONCERT_ID,
-                    USER_ID
-                )
-        ).willReturn(
-            new AdmissionClaimResult(
-                AdmissionClaimStatus
-                    .ALREADY_RESERVING,
-                System.currentTimeMillis()
-                    + 300_000
-            )
-        );
-
-
-        // when + then
-        assertThatThrownBy(
-            () -> reservationFacade
-                .createReservation(
-                    request
-                )
-        )
-            .isInstanceOf(
-                ReservationAlreadyInProgressException.class
-            );
-
-
-        then(reservationService)
-            .shouldHaveNoInteractions();
-
-
-        then(queueAdmissionService)
-            .should(never())
-            .complete(
-                CONCERT_ID,
-                USER_ID
-            );
-
-
-        then(queueAdmissionService)
-            .should(never())
-            .restore(
-                CONCERT_ID,
-                USER_ID
-            );
-    }
-
-
-    @Test
-    void reservation이_실패하면_admission을_복구하고_원래_예외를_다시_던진다() {
+    void reservation이_실패해도_admission은_소비하거나_복구하지_않는다() {
 
         // given
         ReservationRequest request =
@@ -288,17 +193,12 @@ class ReservationFacadeTest {
 
         given(
             queueAdmissionService
-                .claim(
+                .isAdmitted(
                     CONCERT_ID,
                     USER_ID
                 )
         ).willReturn(
-            new AdmissionClaimResult(
-                AdmissionClaimStatus
-                    .CLAIMED,
-                System.currentTimeMillis()
-                    + 300_000
-            )
+            true
         );
 
 
@@ -312,228 +212,52 @@ class ReservationFacadeTest {
         );
 
 
-        given(
-            queueAdmissionService
-                .restore(
-                    CONCERT_ID,
-                    USER_ID
-                )
-        ).willReturn(
-            AdmissionRestoreStatus
-                .RESTORED
-        );
-
-
         // when + then
         assertThatThrownBy(
-            () -> reservationFacade
-                .createReservation(
-                    request
-                )
-        )
-            .isSameAs(
-                reservationException
-            );
-
-
-        then(queueAdmissionService)
-            .should()
-            .restore(
-                CONCERT_ID,
-                USER_ID
-            );
-
-
-        then(queueAdmissionService)
-            .should(never())
-            .complete(
-                CONCERT_ID,
-                USER_ID
-            );
-    }
-
-
-    @Test
-    void admission_restore가_실패해도_원래_reservation_예외를_유지한다() {
-
-        // given
-        ReservationRequest request =
-            new ReservationRequest(
-                CONCERT_ID,
-                USER_ID,
-                100L
-            );
-
-
-        RuntimeException reservationException =
-            new RuntimeException(
-                "reservation failed"
-            );
-
-
-        RuntimeException restoreException =
-            new RuntimeException(
-                "redis restore failed"
-            );
-
-
-        given(
-            queueAdmissionService
-                .claim(
-                    CONCERT_ID,
-                    USER_ID
-                )
-        ).willReturn(
-            new AdmissionClaimResult(
-                AdmissionClaimStatus
-                    .CLAIMED,
-                System.currentTimeMillis()
-                    + 300_000
-            )
-        );
-
-
-        given(
-            reservationService
-                .createReservation(
-                    request
-                )
-        ).willThrow(
+            () ->
+                reservationFacade
+                    .createReservation(
+                        request
+                    )
+        ).isSameAs(
             reservationException
         );
 
 
-        given(
-            queueAdmissionService
-                .restore(
-                    CONCERT_ID,
-                    USER_ID
-                )
-        ).willThrow(
-            restoreException
-        );
-
-
-        // when + then
-        assertThatThrownBy(
-            () -> reservationFacade
-                .createReservation(
-                    request
-                )
-        )
-            .isSameAs(
-                reservationException
-            );
-
-
         then(queueAdmissionService)
             .should()
-            .restore(
+            .isAdmitted(
                 CONCERT_ID,
                 USER_ID
             );
 
 
+        then(reservationService)
+            .should()
+            .createReservation(
+                request
+            );
+
+
+        /*
+         * QueueAdmissionService에는 isAdmitted() 외에
+         * claim / restore / complete 등이 아직 존재할 수 있다.
+         *
+         * shouldHaveNoMoreInteractions()를 통해
+         * ReservationFacade가 그 상태 변경 API를
+         * 전혀 호출하지 않는다는 것을 검증한다.
+         */
         then(queueAdmissionService)
-            .should(never())
-            .complete(
-                CONCERT_ID,
-                USER_ID
-            );
+            .shouldHaveNoMoreInteractions();
+
+
+        then(reservationService)
+            .shouldHaveNoMoreInteractions();
     }
 
 
     @Test
-    void reservation_성공후_complete가_실패해도_reservation은_성공으로_반환한다() {
-
-        // given
-        ReservationRequest request =
-            new ReservationRequest(
-                CONCERT_ID,
-                USER_ID,
-                100L
-            );
-
-
-        ReservationResponse expectedResponse =
-            mock(
-                ReservationResponse.class
-            );
-
-
-        given(
-            queueAdmissionService
-                .claim(
-                    CONCERT_ID,
-                    USER_ID
-                )
-        ).willReturn(
-            new AdmissionClaimResult(
-                AdmissionClaimStatus
-                    .CLAIMED,
-                System.currentTimeMillis()
-                    + 300_000
-            )
-        );
-
-
-        given(
-            reservationService
-                .createReservation(
-                    request
-                )
-        ).willReturn(
-            expectedResponse
-        );
-
-
-        given(
-            queueAdmissionService
-                .complete(
-                    CONCERT_ID,
-                    USER_ID
-                )
-        ).willThrow(
-            new RuntimeException(
-                "redis complete failed"
-            )
-        );
-
-
-        // when
-        ReservationResponse actualResponse =
-            reservationFacade
-                .createReservation(
-                    request
-                );
-
-
-        // then
-        assertThat(actualResponse)
-            .isSameAs(
-                expectedResponse
-            );
-
-
-        then(queueAdmissionService)
-            .should()
-            .complete(
-                CONCERT_ID,
-                USER_ID
-            );
-
-
-        then(queueAdmissionService)
-            .should(never())
-            .restore(
-                CONCERT_ID,
-                USER_ID
-            );
-    }
-
-
-    @Test
-    void 하나의_admission은_순차적으로_두_번_사용할_수_없다() {
+    void 하나의_admission으로_만료전까지_여러_좌석을_순차적으로_예약할_수_있다() {
 
         // given
         ReservationRequest firstRequest =
@@ -558,24 +282,25 @@ class ReservationFacadeTest {
             );
 
 
+        ReservationResponse secondResponse =
+            mock(
+                ReservationResponse.class
+            );
+
+
+        /*
+         * 같은 admission window 안에서
+         * 두 reservation request 모두 admission이 유효하다.
+         */
         given(
             queueAdmissionService
-                .claim(
+                .isAdmitted(
                     CONCERT_ID,
                     USER_ID
                 )
         ).willReturn(
-            new AdmissionClaimResult(
-                AdmissionClaimStatus
-                    .CLAIMED,
-                System.currentTimeMillis()
-                    + 300_000
-            ),
-            new AdmissionClaimResult(
-                AdmissionClaimStatus
-                    .NOT_ADMITTED,
-                null
-            )
+            true,
+            true
         );
 
 
@@ -590,68 +315,179 @@ class ReservationFacadeTest {
 
 
         given(
-            queueAdmissionService
-                .complete(
-                    CONCERT_ID,
-                    USER_ID
+            reservationService
+                .createReservation(
+                    secondRequest
                 )
-        ).willReturn(true);
+        ).willReturn(
+            secondResponse
+        );
 
 
         // when
-        ReservationResponse result =
+        ReservationResponse firstResult =
             reservationFacade
                 .createReservation(
                     firstRequest
                 );
 
 
-        // then - first request
-        assertThat(result)
-            .isSameAs(
-                firstResponse
-            );
-
-
-        // when + then - second request
-        assertThatThrownBy(
-            () -> reservationFacade
+        ReservationResponse secondResult =
+            reservationFacade
                 .createReservation(
                     secondRequest
-                )
-        )
-            .isInstanceOf(
-                AdmissionRequiredException.class
+                );
+
+
+        // then
+        assertThat(
+            firstResult
+        ).isSameAs(
+            firstResponse
+        );
+
+
+        assertThat(
+            secondResult
+        ).isSameAs(
+            secondResponse
+        );
+
+
+        then(queueAdmissionService)
+            .should(
+                times(2)
+            )
+            .isAdmitted(
+                CONCERT_ID,
+                USER_ID
             );
 
 
         then(reservationService)
-            .should(times(1))
+            .should()
             .createReservation(
                 firstRequest
             );
 
 
         then(reservationService)
-            .should(never())
+            .should()
             .createReservation(
                 secondRequest
             );
 
 
         then(queueAdmissionService)
-            .should(times(2))
-            .claim(
+            .shouldHaveNoMoreInteractions();
+
+
+        then(reservationService)
+            .shouldHaveNoMoreInteractions();
+    }
+
+
+    @Test
+    void 첫_예약후_admission이_만료되면_두번째_예약은_막힌다() {
+
+        // given
+        ReservationRequest firstRequest =
+            new ReservationRequest(
                 CONCERT_ID,
-                USER_ID
+                USER_ID,
+                100L
             );
+
+
+        ReservationRequest secondRequest =
+            new ReservationRequest(
+                CONCERT_ID,
+                USER_ID,
+                200L
+            );
+
+
+        ReservationResponse firstResponse =
+            mock(
+                ReservationResponse.class
+            );
+
+
+        /*
+         * 첫 번째 요청 시점에는 admission이 유효하지만,
+         * 두 번째 요청 시점에는 만료됐다고 가정한다.
+         */
+        given(
+            queueAdmissionService
+                .isAdmitted(
+                    CONCERT_ID,
+                    USER_ID
+                )
+        ).willReturn(
+            true,
+            false
+        );
+
+
+        given(
+            reservationService
+                .createReservation(
+                    firstRequest
+                )
+        ).willReturn(
+            firstResponse
+        );
+
+
+        // when
+        ReservationResponse firstResult =
+            reservationFacade
+                .createReservation(
+                    firstRequest
+                );
+
+
+        // then
+        assertThat(
+            firstResult
+        ).isSameAs(
+            firstResponse
+        );
+
+
+        assertThatThrownBy(
+            () ->
+                reservationFacade
+                    .createReservation(
+                        secondRequest
+                    )
+        ).isInstanceOf(
+            AdmissionRequiredException.class
+        );
 
 
         then(queueAdmissionService)
-            .should(times(1))
-            .complete(
+            .should(
+                times(2)
+            )
+            .isAdmitted(
                 CONCERT_ID,
                 USER_ID
             );
+
+
+        then(reservationService)
+            .should()
+            .createReservation(
+                firstRequest
+            );
+
+
+        then(reservationService)
+            .shouldHaveNoMoreInteractions();
+
+
+        then(queueAdmissionService)
+            .shouldHaveNoMoreInteractions();
     }
 }
