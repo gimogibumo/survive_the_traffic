@@ -12,6 +12,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.survive_the_traffic.auth.security.AuthenticatedUser;
 import com.survive_the_traffic.common.config.SecurityConfig;
+import com.survive_the_traffic.payment.domain.PaymentStatus;
+import com.survive_the_traffic.payment.dto.PaymentResponse;
 import com.survive_the_traffic.reservation.domain.ReservationStatus;
 import com.survive_the_traffic.reservation.dto.ReservationRequest;
 import com.survive_the_traffic.reservation.dto.ReservationResponse;
@@ -313,6 +315,84 @@ class ReservationControllerTest {
             reservationFacade
         )
             .shouldHaveNoInteractions();
+    }
+
+    @Test
+    void 결제는_인증된_사용자_id를_사용한다() throws Exception {
+
+        // given
+        Long reservationId = 1000L;
+
+        PaymentResponse response =
+            new PaymentResponse(
+                5000L,
+                reservationId,
+                PaymentStatus.SUCCESS,
+                150000L
+            );
+
+        given(
+            reservationService.createPayment(
+                USER_ID,
+                reservationId
+            )
+        ).willReturn(response);
+
+
+        // when + then
+        mockMvc.perform(
+                post(
+                    "/api/reservations/{reservationId}/payments",
+                    reservationId
+                )
+                    .with(user(authenticatedUser()))
+                    .with(csrf())
+            )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.paymentId").value(5000))
+            .andExpect(jsonPath("$.reservationId").value(reservationId))
+            .andExpect(jsonPath("$.status").value("SUCCESS"))
+            .andExpect(jsonPath("$.amount").value(150000));
+
+
+        then(
+            reservationService
+        )
+            .should()
+            .createPayment(
+                USER_ID,
+                reservationId
+            );
+    }
+
+    @Test
+    void 인증되지_않은_사용자는_결제할_수_없다() throws Exception {
+
+        Long reservationId = 1000L;
+
+        mockMvc.perform(
+                post(
+                    "/api/reservations/{reservationId}/payments",
+                    reservationId
+                )
+                    .with(csrf())
+            )
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void CSRF_토큰이_없으면_결제할_수_없다() throws Exception {
+
+        Long reservationId = 1000L;
+
+        mockMvc.perform(
+                post(
+                    "/api/reservations/{reservationId}/payments",
+                    reservationId
+                )
+                    .with(user(authenticatedUser()))
+            )
+            .andExpect(status().isForbidden());
     }
 
 

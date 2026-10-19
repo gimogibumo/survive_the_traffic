@@ -66,9 +66,10 @@ public class ReservationService {
     }
 
     @Transactional
-    public PaymentResponse createPayment(Long reservationId) {
-        Reservation reservation = reservationRepository.findById(reservationId).orElseThrow(
-            ReservationNotFoundException::new);
+    public PaymentResponse createPayment(Long userId, Long reservationId) {
+        Reservation reservation =
+            reservationRepository.findByIdAndUser_Id(reservationId, userId)
+                .orElseThrow(ReservationNotFoundException::new);
 
         reservation.validatePayable(LocalDateTime.now());
         //결제 했다 치고

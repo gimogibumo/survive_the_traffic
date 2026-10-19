@@ -34,8 +34,17 @@ public class ReservationController {
     }
 
     @PostMapping("/{reservationId}/payments")
-    public ResponseEntity<PaymentResponse> createPayment(@PathVariable Long reservationId) {
-        return ResponseEntity.ok(reservationService.createPayment(reservationId));
+    public ResponseEntity<PaymentResponse> createPayment(
+        @PathVariable Long reservationId,
+        @AuthenticationPrincipal AuthenticatedUser authenticatedUser
+    ) {
+        PaymentResponse response =
+            reservationService.createPayment(
+                authenticatedUser.getUserId(),
+                reservationId
+            );
+
+        return ResponseEntity.ok(response);
     }
 
 }

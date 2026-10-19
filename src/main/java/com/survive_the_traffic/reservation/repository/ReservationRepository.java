@@ -3,6 +3,7 @@ package com.survive_the_traffic.reservation.repository;
 import com.survive_the_traffic.reservation.domain.Reservation;
 import com.survive_the_traffic.reservation.domain.ReservationStatus;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -26,4 +27,9 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     long countBySeatId(Long seatId);
 
     long countBySeatIdAndStatus(Long seatId, ReservationStatus status);
+
+    Optional<Reservation> findByIdAndUser_Id(
+        Long reservationId,
+        Long userId
+    );
 }

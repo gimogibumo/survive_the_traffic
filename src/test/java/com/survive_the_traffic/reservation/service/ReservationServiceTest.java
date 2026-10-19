@@ -9,11 +9,15 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 
 import com.survive_the_traffic.concert.domain.Concert;
+import com.survive_the_traffic.payment.domain.Payment;
+import com.survive_the_traffic.payment.domain.PaymentStatus;
+import com.survive_the_traffic.payment.dto.PaymentResponse;
 import com.survive_the_traffic.payment.repository.PaymentRepository;
 import com.survive_the_traffic.reservation.domain.Reservation;
 import com.survive_the_traffic.reservation.domain.ReservationStatus;
 import com.survive_the_traffic.reservation.dto.ReservationRequest;
 import com.survive_the_traffic.reservation.dto.ReservationResponse;
+import com.survive_the_traffic.reservation.exception.ReservationNotFoundException;
 import com.survive_the_traffic.reservation.repository.ReservationRepository;
 import com.survive_the_traffic.seat.domain.Seat;
 import com.survive_the_traffic.seat.domain.SeatStatus;
@@ -508,5 +512,180 @@ class ReservationServiceTest {
             reservationRepository
         )
             .shouldHaveNoInteractions();
+    }
+
+    @Test
+    void 인증된_사용자에게_속하지_않은_예약은_결제할_수_없다() {
+
+        // given
+        Long reservationId =
+            1000L;
+
+        given(
+            reservationRepository
+                .findByIdAndUser_Id(
+                    reservationId,
+                    USER_ID
+                )
+        ).willReturn(
+            Optional.empty()
+        );
+
+
+        // when + then
+        assertThatThrownBy(
+            () ->
+                reservationService
+                    .createPayment(
+                        USER_ID,
+                        reservationId
+                    )
+        )
+            .isInstanceOf(
+                ReservationNotFoundException.class
+            );
+
+
+        then(
+            reservationRepository
+        )
+            .should()
+            .findByIdAndUser_Id(
+                reservationId,
+                USER_ID
+            );
+
+        then(
+            paymentRepository
+        )
+            .shouldHaveNoInteractions();
+    }
+
+    @Test
+    void 인증된_사용자는_자신의_예약을_결제할_수_있다() {
+
+        // given
+        Long reservationId = 1000L;
+        Long paymentId = 5000L;
+        Long amount = 150000L;
+
+        Reservation reservation =
+            mock(Reservation.class);
+
+        Seat seat =
+            mock(Seat.class);
+
+        Payment savedPayment =
+            mock(Payment.class);
+
+        given(
+            reservationRepository
+                .findByIdAndUser_Id(
+                    reservationId,
+                    USER_ID
+                )
+        ).willReturn(
+            Optional.of(reservation)
+        );
+
+        given(
+            reservation.getSeat()
+        ).willReturn(
+            seat
+        );
+
+        given(
+            seat.getPrice()
+        ).willReturn(
+            amount
+        );
+
+        given(
+            paymentRepository.save(
+                any(Payment.class)
+            )
+        ).willReturn(
+            savedPayment
+        );
+
+        given(
+            savedPayment.getId()
+        ).willReturn(
+            paymentId
+        );
+
+        given(
+            savedPayment.getReservation()
+        ).willReturn(
+            reservation
+        );
+
+        given(
+            reservation.getId()
+        ).willReturn(
+            reservationId
+        );
+
+        given(
+            savedPayment.getStatus()
+        ).willReturn(
+            PaymentStatus.SUCCESS
+        );
+
+        given(
+            savedPayment.getAmount()
+        ).willReturn(
+            amount
+        );
+
+
+        // when
+        PaymentResponse response =
+            reservationService.createPayment(
+                USER_ID,
+                reservationId
+            );
+
+
+        // then
+        assertThat(response)
+            .isNotNull();
+
+        then(
+            reservationRepository
+        )
+            .should()
+            .findByIdAndUser_Id(
+                reservationId,
+                USER_ID
+            );
+
+        then(
+            reservation
+        )
+            .should()
+            .validatePayable(
+                any(LocalDateTime.class)
+            );
+
+        then(
+            paymentRepository
+        )
+            .should()
+            .save(
+                any(Payment.class)
+            );
+
+        then(
+            reservation
+        )
+            .should()
+            .confirm();
+
+        then(
+            seat
+        )
+            .should()
+            .sell();
     }
 }
