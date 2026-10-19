@@ -3,9 +3,11 @@ package com.survive_the_traffic.reservation.controller;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import com.survive_the_traffic.common.config.SecurityConfig;
 import com.survive_the_traffic.common.exception.AdmissionRequiredException;
 import com.survive_the_traffic.common.exception.SeatConcertMismatchException;
 import com.survive_the_traffic.payment.domain.PaymentStatus;
@@ -28,12 +30,14 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
 
 @WebMvcTest(ReservationController.class)
+@Import(SecurityConfig.class)
 class ReservationControllerTest {
 
     @Autowired
@@ -74,6 +78,7 @@ class ReservationControllerTest {
 
         mockMvc.perform(
                 post("/api/reservations")
+                    .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("""
                         {
@@ -102,6 +107,7 @@ class ReservationControllerTest {
 
         mockMvc.perform(
                 post("/api/reservations")
+                    .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("""
                     {
@@ -131,6 +137,7 @@ class ReservationControllerTest {
         // when & then
         mockMvc.perform(
                 post("/api/reservations")
+                    .with(csrf())
                     .contentType("application/json")
                     .content(objectMapper.writeValueAsString(request))
             )
@@ -151,6 +158,7 @@ class ReservationControllerTest {
 
         mockMvc.perform(
                 post("/api/reservations")
+                    .with(csrf())
                     .contentType("application/json")
                     .content(objectMapper.writeValueAsString(request))
             )
@@ -171,6 +179,7 @@ class ReservationControllerTest {
 
         mockMvc.perform(
                 post("/api/reservations")
+                    .with(csrf())
                     .contentType("application/json")
                     .content(objectMapper.writeValueAsString(request))
             )
@@ -204,6 +213,7 @@ class ReservationControllerTest {
                     "/api/reservations/{reservationId}/payments",
                     reservationId
                 )
+                    .with(csrf())
             )
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.paymentId").value(5001))
@@ -226,6 +236,7 @@ class ReservationControllerTest {
                     "/api/reservations/{reservationId}/payments",
                     reservationId
                 )
+                    .with(csrf())
             )
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.code")
@@ -246,6 +257,7 @@ class ReservationControllerTest {
                     "/api/reservations/{reservationId}/payments",
                     reservationId
                 )
+                    .with(csrf())
             )
             .andExpect(status().isConflict())
             .andExpect(jsonPath("$.code")
@@ -266,6 +278,7 @@ class ReservationControllerTest {
                     "/api/reservations/{reservationId}/payments",
                     reservationId
                 )
+                    .with(csrf())
             )
             .andExpect(status().isConflict())
             .andExpect(jsonPath("$.code")
@@ -296,6 +309,7 @@ class ReservationControllerTest {
                       "seatId": 20
                     }
                     """)
+                    .with(csrf())
             )
             .andExpect(status().isBadRequest());
     }
