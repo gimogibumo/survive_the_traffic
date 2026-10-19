@@ -2,8 +2,10 @@ package com.survive_the_traffic.common.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
@@ -41,6 +43,18 @@ public class SecurityConfig {
                             csrfTokenRepository
                         )
             )
+            .logout(
+                logout ->
+                    logout
+                        .logoutUrl(
+                            "/api/auth/logout"
+                        )
+                        .logoutSuccessHandler(
+                            new HttpStatusReturningLogoutSuccessHandler(
+                                HttpStatus.NO_CONTENT
+                            )
+                        )
+            )
             .httpBasic(
                 httpBasic ->
                     httpBasic.disable()
@@ -55,11 +69,13 @@ public class SecurityConfig {
 
     @Bean
     public SecurityContextRepository securityContextRepository() {
+
         return new HttpSessionSecurityContextRepository();
     }
 
     @Bean
     public CsrfTokenRepository csrfTokenRepository() {
+
         return CookieCsrfTokenRepository
             .withHttpOnlyFalse();
     }

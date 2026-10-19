@@ -407,6 +407,306 @@ class SessionAuthenticationIntegrationTest {
         );
     }
 
+    @Test
+    void 로그인한_사용자가_logout하면_session과_인증정보가_제거된다()
+        throws Exception {
+
+        // given
+        String rawPassword =
+            "password1234";
+
+        User user =
+            User.builder()
+                .id(1L)
+                .email("kim@example.com")
+                .name("기범")
+                .passwordHash(
+                    passwordEncoder.encode(
+                        rawPassword
+                    )
+                )
+                .createdAt(
+                    LocalDateTime.now()
+                )
+                .build();
+
+        given(
+            userDetailsService.loadUserByUsername(
+                "kim@example.com"
+            )
+        ).willReturn(
+            AuthenticatedUser.from(user)
+        );
+
+
+        /*
+         * 최초 session 생성
+         */
+        MockHttpSession session =
+            new MockHttpSession();
+
+
+        /*
+         * 로그인용 CSRF token 발급
+         */
+        CsrfCredentials loginCsrf =
+            issueCsrf(
+                session
+            );
+
+
+        /*
+         * 로그인
+         */
+        MvcResult loginResult =
+            mockMvc.perform(
+                    post("/api/auth/login")
+                        .session(
+                            session
+                        )
+                        .cookie(
+                            loginCsrf.cookie()
+                        )
+                        .header(
+                            "X-XSRF-TOKEN",
+                            loginCsrf.token()
+                        )
+                        .contentType(
+                            MediaType.APPLICATION_JSON
+                        )
+                        .content(
+                            """
+                            {
+                              "email": "kim@example.com",
+                              "password": "password1234"
+                            }
+                            """
+                        )
+                )
+                .andExpect(
+                    status().isOk()
+                )
+                .andReturn();
+
+
+        MockHttpSession authenticatedSession =
+            (MockHttpSession)
+                loginResult
+                    .getRequest()
+                    .getSession(false);
+
+
+        assertThat(
+            authenticatedSession
+        ).isNotNull();
+
+
+        /*
+         * 로그인 상태 확인
+         */
+        mockMvc.perform(
+                get("/api/users/me")
+                    .session(
+                        authenticatedSession
+                    )
+            )
+            .andExpect(
+                status().isOk()
+            )
+            .andExpect(
+                jsonPath("$.id")
+                    .value(1L)
+            );
+
+
+        /*
+         * 중요:
+         *
+         * 로그인 성공 시 기존 CSRF token은 폐기된다.
+         *
+         * 따라서 logout 전에 새로운 CSRF token을
+         * 다시 발급받아야 한다.
+         */
+        CsrfCredentials logoutCsrf =
+            issueCsrf(
+                authenticatedSession
+            );
+
+
+        /*
+         * when
+         *
+         * logout
+         */
+        MvcResult logoutResult =
+            mockMvc.perform(
+                    post("/api/auth/logout")
+                        .session(
+                            authenticatedSession
+                        )
+                        .cookie(
+                            logoutCsrf.cookie()
+                        )
+                        .header(
+                            "X-XSRF-TOKEN",
+                            logoutCsrf.token()
+                        )
+                )
+                .andExpect(
+                    status().isNoContent()
+                )
+                .andReturn();
+
+
+        /*
+         * then 1
+         *
+         * logout 과정에서 HttpSession이
+         * invalidation 되었는지 확인한다.
+         */
+        assertThat(
+            authenticatedSession.isInvalid()
+        ).isTrue();
+
+
+        /*
+         * then 2
+         *
+         * logout 성공 후에는
+         * 이전 인증 상태가 존재해서는 안 된다.
+         *
+         * 새로운 요청에서 /me는 401이어야 한다.
+         */
+        mockMvc.perform(
+                get("/api/users/me")
+            )
+            .andExpect(
+                status().isUnauthorized()
+            );
+    }
+
+    @Test
+    void CSRF_토큰없이_logout하면_403이고_로그인상태는_유지된다()
+        throws Exception {
+
+        // given
+        String rawPassword =
+            "password1234";
+
+        User user =
+            User.builder()
+                .id(1L)
+                .email("kim@example.com")
+                .name("기범")
+                .passwordHash(
+                    passwordEncoder.encode(
+                        rawPassword
+                    )
+                )
+                .createdAt(
+                    LocalDateTime.now()
+                )
+                .build();
+
+        given(
+            userDetailsService.loadUserByUsername(
+                "kim@example.com"
+            )
+        ).willReturn(
+            AuthenticatedUser.from(user)
+        );
+
+
+        MockHttpSession session =
+            new MockHttpSession();
+
+
+        CsrfCredentials loginCsrf =
+            issueCsrf(
+                session
+            );
+
+
+        MvcResult loginResult =
+            mockMvc.perform(
+                    post("/api/auth/login")
+                        .session(
+                            session
+                        )
+                        .cookie(
+                            loginCsrf.cookie()
+                        )
+                        .header(
+                            "X-XSRF-TOKEN",
+                            loginCsrf.token()
+                        )
+                        .contentType(
+                            MediaType.APPLICATION_JSON
+                        )
+                        .content(
+                            """
+                            {
+                              "email": "kim@example.com",
+                              "password": "password1234"
+                            }
+                            """
+                        )
+                )
+                .andExpect(
+                    status().isOk()
+                )
+                .andReturn();
+
+
+        MockHttpSession authenticatedSession =
+            (MockHttpSession)
+                loginResult
+                    .getRequest()
+                    .getSession(false);
+
+
+        /*
+         * when
+         *
+         * CSRF token 없이 logout 시도
+         */
+        mockMvc.perform(
+                post("/api/auth/logout")
+                    .session(
+                        authenticatedSession
+                    )
+            )
+            .andExpect(
+                status().isForbidden()
+            );
+
+
+        /*
+         * then
+         *
+         * logout 자체가 수행되지 않았으므로
+         * 기존 session은 여전히 유효해야 한다.
+         */
+        assertThat(
+            authenticatedSession.isInvalid()
+        ).isFalse();
+
+
+        mockMvc.perform(
+                get("/api/users/me")
+                    .session(
+                        authenticatedSession
+                    )
+            )
+            .andExpect(
+                status().isOk()
+            )
+            .andExpect(
+                jsonPath("$.id")
+                    .value(1L)
+            );
+    }
+
     /*
      * 실제 CookieCsrfTokenRepository 흐름을 이용해서
      * CSRF credential을 발급받는 helper.
