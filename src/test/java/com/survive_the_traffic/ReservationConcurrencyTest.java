@@ -195,9 +195,9 @@ class ReservationConcurrencyTest {
 
                             reservationService
                                 .createReservation(
+                                    userId,
                                     new ReservationRequest(
                                         concertId,
-                                        userId,
                                         seatId
                                     )
                                 );

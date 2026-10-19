@@ -1,19 +1,16 @@
 package com.survive_the_traffic.queue.controller;
 
+import com.survive_the_traffic.auth.security.AuthenticatedUser;
 import com.survive_the_traffic.queue.dto.QueueStatusResponse;
-import com.survive_the_traffic.queue.dto.WaitingQueueJoinRequest;
 import com.survive_the_traffic.queue.dto.WaitingQueueResponse;
 import com.survive_the_traffic.queue.service.WaitingQueueService;
-import jakarta.annotation.Nonnull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -26,10 +23,13 @@ public class WaitingQueueController {
     @PostMapping("/{concertId}/join")
     public ResponseEntity<WaitingQueueResponse> join(
         @PathVariable Long concertId,
-        @Nonnull @RequestBody WaitingQueueJoinRequest request
+        @AuthenticationPrincipal AuthenticatedUser authenticatedUser
     ) {
         WaitingQueueResponse response =
-            waitingQueueService.join(concertId, request.userId());
+            waitingQueueService.join(
+                concertId,
+                authenticatedUser.getUserId()
+            );
 
         return ResponseEntity.ok(response);
     }
@@ -37,10 +37,13 @@ public class WaitingQueueController {
     @GetMapping("/{concertId}/position")
     public ResponseEntity<WaitingQueueResponse> getPosition(
         @PathVariable Long concertId,
-        @RequestParam Long userId
+        @AuthenticationPrincipal AuthenticatedUser authenticatedUser
     ) {
         WaitingQueueResponse response =
-            waitingQueueService.getPosition(concertId, userId);
+            waitingQueueService.getPosition(
+                concertId,
+                authenticatedUser.getUserId()
+            );
 
         return ResponseEntity.ok(response);
     }
@@ -48,8 +51,14 @@ public class WaitingQueueController {
     @GetMapping("/{concertId}/status")
     public ResponseEntity<QueueStatusResponse> getStatus(
         @PathVariable Long concertId,
-        @RequestParam Long userId
+        @AuthenticationPrincipal AuthenticatedUser authenticatedUser
     ) {
-        return ResponseEntity.ok(waitingQueueService.getStatus(concertId, userId));
+        QueueStatusResponse response =
+            waitingQueueService.getStatus(
+                concertId,
+                authenticatedUser.getUserId()
+            );
+
+        return ResponseEntity.ok(response);
     }
 }

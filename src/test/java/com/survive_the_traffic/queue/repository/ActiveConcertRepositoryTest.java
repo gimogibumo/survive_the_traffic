@@ -26,7 +26,9 @@ class ActiveConcertRepositoryTest {
 
     @AfterEach
     void tearDown() {
-        redisTemplate.delete(ACTIVE_CONCERTS_KEY);
+        redisTemplate.opsForSet().remove(
+                ACTIVE_CONCERTS_KEY, "1", "3", "7"
+            );
     }
 
     @Test

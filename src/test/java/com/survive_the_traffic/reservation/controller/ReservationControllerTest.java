@@ -1,302 +1,430 @@
 package com.survive_the_traffic.reservation.controller;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.when;
+import static org.mockito.BDDMockito.then;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.survive_the_traffic.common.exception.AdmissionRequiredException;
-import com.survive_the_traffic.common.exception.SeatConcertMismatchException;
+import com.survive_the_traffic.auth.security.AuthenticatedUser;
+import com.survive_the_traffic.common.config.SecurityConfig;
 import com.survive_the_traffic.payment.domain.PaymentStatus;
 import com.survive_the_traffic.payment.dto.PaymentResponse;
 import com.survive_the_traffic.reservation.domain.ReservationStatus;
 import com.survive_the_traffic.reservation.dto.ReservationRequest;
 import com.survive_the_traffic.reservation.dto.ReservationResponse;
-import com.survive_the_traffic.reservation.exception.ReservationExpiredException;
-import com.survive_the_traffic.reservation.exception.ReservationNotFoundException;
-import com.survive_the_traffic.reservation.exception.ReservationNotPendingException;
 import com.survive_the_traffic.reservation.service.ReservationFacade;
 import com.survive_the_traffic.reservation.service.ReservationService;
-import com.survive_the_traffic.seat.exception.SeatNotAvailableException;
-import com.survive_the_traffic.seat.exception.SeatNotFoundException;
-import com.survive_the_traffic.user.exception.UserNotFoundException;
-
+import com.survive_the_traffic.user.domain.User;
 import java.time.LocalDateTime;
-
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import tools.jackson.databind.ObjectMapper;
 
-@WebMvcTest(ReservationController.class)
+@WebMvcTest(
+    ReservationController.class
+)
+@Import(
+    SecurityConfig.class
+)
 class ReservationControllerTest {
+
+    private static final Long USER_ID =
+        10L;
+
+    private static final Long CONCERT_ID =
+        1L;
+
+    private static final Long SEAT_ID =
+        100L;
 
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @MockitoBean
+    private ReservationFacade reservationFacade;
 
     @MockitoBean
     private ReservationService reservationService;
 
-    @MockitoBean
-    private ReservationFacade reservationFacade;
 
     @Test
-    void 예약을_생성한다() throws Exception {
+    void 인증된_사용자는_예약을_생성할_수_있다()
+        throws Exception {
 
-        ReservationRequest request =
-            new ReservationRequest(
-                1L,
-                10L,
-                100L
+        // given
+        LocalDateTime expiresAt =
+            LocalDateTime.of(
+                2026,
+                10,
+                19,
+                15,
+                30
             );
 
         ReservationResponse response =
             new ReservationResponse(
                 1L,
-                100L,
+                SEAT_ID,
                 ReservationStatus.PENDING,
-                LocalDateTime.now().plusMinutes(5)
+                expiresAt
             );
 
         given(
-            reservationFacade.createReservation(
-                any(ReservationRequest.class)
-            )
-        ).willReturn(response);
-
-        mockMvc.perform(
-                post("/api/reservations")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("""
-                        {
-                          "concertId": 1,
-                          "userId": 10,
-                          "seatId": 100
-                        }
-                        """)
-            )
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.reservationId").value(1))
-            .andExpect(jsonPath("$.seatId").value(100));
-    }
-
-    @Test
-    void admission되지_않은_사용자의_예약요청은_차단한다()
-        throws Exception {
-
-        given(
-            reservationFacade.createReservation(
-                any(ReservationRequest.class)
-            )
-        ).willThrow(
-            new AdmissionRequiredException()
+            reservationFacade
+                .createReservation(
+                    eq(USER_ID),
+                    any(
+                        ReservationRequest.class
+                    )
+                )
+        ).willReturn(
+            response
         );
 
+
+        // when + then
         mockMvc.perform(
-                post("/api/reservations")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("""
-                    {
-                      "concertId": 1,
-                      "userId": 10,
-                      "seatId": 100
-                    }
-                    """)
+                post(
+                    "/api/reservations"
+                )
+                    .with(
+                        user(
+                            authenticatedUser()
+                        )
+                    )
+                    .with(
+                        csrf()
+                    )
+                    .contentType(
+                        MediaType.APPLICATION_JSON
+                    )
+                    .content(
+                        """
+                        {
+                          "concertId": 1,
+                          "seatId": 100
+                        }
+                        """
+                    )
             )
             .andExpect(
-                status().isTooManyRequests()
+                status().isOk()
+            )
+            .andExpect(
+                jsonPath(
+                    "$.reservationId"
+                ).value(
+                    1L
+                )
+            )
+            .andExpect(
+                jsonPath(
+                    "$.seatId"
+                ).value(
+                    100L
+                )
+            )
+            .andExpect(
+                jsonPath(
+                    "$.status"
+                ).value(
+                    "PENDING"
+                )
+            );
+
+
+        then(
+            reservationFacade
+        )
+            .should()
+            .createReservation(
+                eq(USER_ID),
+                eq(
+                    new ReservationRequest(
+                        CONCERT_ID,
+                        SEAT_ID
+                    )
+                )
             );
     }
 
+
     @Test
-    @DisplayName("존재하지 않는 사용자가 예약하면 404를 반환한다")
-    void createReservation_userNotFound() throws Exception {
+    void request_body의_userId가_아니라_인증된_사용자_id를_사용한다()
+        throws Exception {
 
         // given
-        ReservationRequest request =
-            new ReservationRequest(1L,999L, 101L);
+        ReservationResponse response =
+            new ReservationResponse(
+                1L,
+                SEAT_ID,
+                ReservationStatus.PENDING,
+                LocalDateTime.of(
+                    2026,
+                    10,
+                    19,
+                    15,
+                    30
+                )
+            );
 
-        when(reservationFacade.createReservation(any(ReservationRequest.class)))
-            .thenThrow(new UserNotFoundException());
+        given(
+            reservationFacade
+                .createReservation(
+                    eq(USER_ID),
+                    any(
+                        ReservationRequest.class
+                    )
+                )
+        ).willReturn(
+            response
+        );
 
 
-        // when & then
+        /*
+         * 악의적으로 userId=999를 body에 넣는다.
+         *
+         * ReservationRequest에는 userId field가 없으므로
+         * business identity는 반드시 principal의 USER_ID=10이어야 한다.
+         */
         mockMvc.perform(
-                post("/api/reservations")
-                    .contentType("application/json")
-                    .content(objectMapper.writeValueAsString(request))
+                post(
+                    "/api/reservations"
+                )
+                    .with(
+                        user(
+                            authenticatedUser()
+                        )
+                    )
+                    .with(
+                        csrf()
+                    )
+                    .contentType(
+                        MediaType.APPLICATION_JSON
+                    )
+                    .content(
+                        """
+                        {
+                          "concertId": 1,
+                          "userId": 999,
+                          "seatId": 100
+                        }
+                        """
+                    )
             )
-            .andExpect(status().isNotFound())
-            .andExpect(jsonPath("$.code")
-                .value("USER_NOT_FOUND"));
+            .andExpect(
+                status().isOk()
+            );
+
+
+        /*
+         * userId=999가 아니라
+         * authenticated principal의 userId=10이 전달되는지 검증.
+         */
+        then(
+            reservationFacade
+        )
+            .should()
+            .createReservation(
+                eq(USER_ID),
+                eq(
+                    new ReservationRequest(
+                        CONCERT_ID,
+                        SEAT_ID
+                    )
+                )
+            );
+    }
+
+
+    @Test
+    void 인증되지_않은_사용자는_예약할_수_없다()
+        throws Exception {
+
+        mockMvc.perform(
+                post(
+                    "/api/reservations"
+                )
+                    .with(
+                        csrf()
+                    )
+                    .contentType(
+                        MediaType.APPLICATION_JSON
+                    )
+                    .content(
+                        """
+                        {
+                          "concertId": 1,
+                          "seatId": 100
+                        }
+                        """
+                    )
+            )
+            .andExpect(
+                status().isUnauthorized()
+            );
+
+
+        then(
+            reservationFacade
+        )
+            .shouldHaveNoInteractions();
+    }
+
+
+    @Test
+    void CSRF_토큰이_없으면_예약요청은_403이다()
+        throws Exception {
+
+        mockMvc.perform(
+                post(
+                    "/api/reservations"
+                )
+                    .with(
+                        user(
+                            authenticatedUser()
+                        )
+                    )
+                    .contentType(
+                        MediaType.APPLICATION_JSON
+                    )
+                    .content(
+                        """
+                        {
+                          "concertId": 1,
+                          "seatId": 100
+                        }
+                        """
+                    )
+            )
+            .andExpect(
+                status().isForbidden()
+            );
+
+
+        then(
+            reservationFacade
+        )
+            .shouldHaveNoInteractions();
     }
 
     @Test
-    @DisplayName("존재하지 않는 좌석을 예약하면 404를 반환한다")
-    void createReservation_seatNotFound() throws Exception {
-
-        ReservationRequest request =
-            new ReservationRequest(1L,1L, 999L);
-
-        when(reservationFacade.createReservation(any(ReservationRequest.class)))
-            .thenThrow(new SeatNotFoundException());
-
-        mockMvc.perform(
-                post("/api/reservations")
-                    .contentType("application/json")
-                    .content(objectMapper.writeValueAsString(request))
-            )
-            .andExpect(status().isNotFound())
-            .andExpect(jsonPath("$.code")
-                .value("SEAT_NOT_FOUND"));
-    }
-
-    @Test
-    @DisplayName("이미 예약된 좌석을 예약하면 409를 반환한다")
-    void createReservation_seatNotAvailable() throws Exception {
-
-        ReservationRequest request =
-            new ReservationRequest(1L,1L, 101L);
-
-        when(reservationFacade.createReservation(any(ReservationRequest.class)))
-            .thenThrow(new SeatNotAvailableException());
-
-        mockMvc.perform(
-                post("/api/reservations")
-                    .contentType("application/json")
-                    .content(objectMapper.writeValueAsString(request))
-            )
-            .andExpect(status().isConflict())
-            .andExpect(jsonPath("$.code")
-                .value("SEAT_NOT_AVAILABLE"));
-    }
-
-    @Test
-    @DisplayName("예약 결제를 처리한다")
-    void createPayment_success() throws Exception {
+    void 결제는_인증된_사용자_id를_사용한다() throws Exception {
 
         // given
-        Long reservationId = 1001L;
+        Long reservationId = 1000L;
 
         PaymentResponse response =
             new PaymentResponse(
-                5001L,
-                1001L,
+                5000L,
+                reservationId,
                 PaymentStatus.SUCCESS,
                 150000L
             );
 
-        when(reservationService.createPayment(reservationId))
-            .thenReturn(response);
+        given(
+            reservationService.createPayment(
+                USER_ID,
+                reservationId
+            )
+        ).willReturn(response);
 
 
-        // when & then
+        // when + then
         mockMvc.perform(
                 post(
                     "/api/reservations/{reservationId}/payments",
                     reservationId
                 )
+                    .with(user(authenticatedUser()))
+                    .with(csrf())
             )
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.paymentId").value(5001))
-            .andExpect(jsonPath("$.reservationId").value(1001))
+            .andExpect(jsonPath("$.paymentId").value(5000))
+            .andExpect(jsonPath("$.reservationId").value(reservationId))
             .andExpect(jsonPath("$.status").value("SUCCESS"))
             .andExpect(jsonPath("$.amount").value(150000));
+
+
+        then(
+            reservationService
+        )
+            .should()
+            .createPayment(
+                USER_ID,
+                reservationId
+            );
     }
 
     @Test
-    @DisplayName("존재하지 않는 예약을 결제하면 404를 반환한다")
-    void createPayment_reservationNotFound() throws Exception {
+    void 인증되지_않은_사용자는_결제할_수_없다() throws Exception {
 
-        Long reservationId = 999L;
-
-        when(reservationService.createPayment(reservationId))
-            .thenThrow(new ReservationNotFoundException());
+        Long reservationId = 1000L;
 
         mockMvc.perform(
                 post(
                     "/api/reservations/{reservationId}/payments",
                     reservationId
                 )
+                    .with(csrf())
             )
-            .andExpect(status().isNotFound())
-            .andExpect(jsonPath("$.code")
-                .value("RESERVATION_NOT_FOUND"));
+            .andExpect(status().isUnauthorized());
     }
 
     @Test
-    @DisplayName("PENDING 상태가 아닌 예약을 결제하면 409를 반환한다")
-    void createPayment_notPending() throws Exception {
+    void CSRF_토큰이_없으면_결제할_수_없다() throws Exception {
 
-        Long reservationId = 1001L;
-
-        when(reservationService.createPayment(reservationId))
-            .thenThrow(new ReservationNotPendingException());
+        Long reservationId = 1000L;
 
         mockMvc.perform(
                 post(
                     "/api/reservations/{reservationId}/payments",
                     reservationId
                 )
+                    .with(user(authenticatedUser()))
             )
-            .andExpect(status().isConflict())
-            .andExpect(jsonPath("$.code")
-                .value("RESERVATION_NOT_PENDING"));
+            .andExpect(status().isForbidden());
     }
 
-    @Test
-    @DisplayName("만료된 예약을 결제하면 409를 반환한다")
-    void createPayment_expired() throws Exception {
 
-        Long reservationId = 1001L;
+    private AuthenticatedUser authenticatedUser() {
 
-        when(reservationService.createPayment(reservationId))
-            .thenThrow(new ReservationExpiredException());
-
-        mockMvc.perform(
-                post(
-                    "/api/reservations/{reservationId}/payments",
-                    reservationId
+        User user =
+            User.builder()
+                .id(
+                    USER_ID
                 )
-            )
-            .andExpect(status().isConflict())
-            .andExpect(jsonPath("$.code")
-                .value("RESERVATION_EXPIRED"));
-    }
+                .email(
+                    "kim@example.com"
+                )
+                .name(
+                    "기범"
+                )
+                .passwordHash(
+                    "encoded-password"
+                )
+                .createdAt(
+                    LocalDateTime.of(
+                        2026,
+                        10,
+                        19,
+                        10,
+                        0
+                    )
+                )
+                .build();
 
-    @Test
-    void concert와_seat가_일치하지_않으면_400을_반환한다()
-        throws Exception {
-
-        // given
-        given(
-            reservationFacade.createReservation(
-                any(ReservationRequest.class)
-            )
-        ).willThrow(
-            new SeatConcertMismatchException()
+        return AuthenticatedUser.from(
+            user
         );
-
-        // when & then
-        mockMvc.perform(
-                post("/api/reservations")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("""
-                    {
-                      "concertId": 1,
-                      "userId": 10,
-                      "seatId": 20
-                    }
-                    """)
-            )
-            .andExpect(status().isBadRequest());
     }
 }

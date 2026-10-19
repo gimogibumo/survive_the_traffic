@@ -47,3 +47,7 @@ management:
     web:
       exposure:
         include: health,metrics
+app:
+  cors:
+    allowed-origins:
+      - ${FRONTEND_ORIGIN:http://localhost:5173}

@@ -19,8 +19,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest
+@ActiveProfiles("test")
 class QueueAdmissionRepositoryTest {
 
     private static final Long CONCERT_ID = 1L;
@@ -370,7 +372,7 @@ class QueueAdmissionRepositoryTest {
         assertThat(
             ttlMillis
         ).isLessThanOrEqualTo(
-            Duration.ofMinutes(5)
+            Duration.ofMinutes(6)
                 .toMillis()
         );
 

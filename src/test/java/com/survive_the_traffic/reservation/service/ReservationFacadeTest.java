@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 
 import com.survive_the_traffic.common.exception.AdmissionRequiredException;
 import com.survive_the_traffic.queue.service.QueueAdmissionService;
@@ -17,7 +16,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith(MockitoExtension.class)
+@ExtendWith(
+    MockitoExtension.class
+)
 class ReservationFacadeTest {
 
     private static final Long CONCERT_ID =
@@ -26,16 +27,17 @@ class ReservationFacadeTest {
     private static final Long USER_ID =
         10L;
 
+    private static final Long SEAT_ID =
+        100L;
+
 
     @Mock
     private QueueAdmissionService
         queueAdmissionService;
 
-
     @Mock
     private ReservationService
         reservationService;
-
 
     @InjectMocks
     private ReservationFacade
@@ -49,16 +51,13 @@ class ReservationFacadeTest {
         ReservationRequest request =
             new ReservationRequest(
                 CONCERT_ID,
-                USER_ID,
-                100L
+                SEAT_ID
             );
-
 
         ReservationResponse expectedResponse =
             mock(
                 ReservationResponse.class
             );
-
 
         given(
             queueAdmissionService
@@ -70,10 +69,10 @@ class ReservationFacadeTest {
             true
         );
 
-
         given(
             reservationService
                 .createReservation(
+                    USER_ID,
                     request
                 )
         ).willReturn(
@@ -85,6 +84,7 @@ class ReservationFacadeTest {
         ReservationResponse actualResponse =
             reservationFacade
                 .createReservation(
+                    USER_ID,
                     request
                 );
 
@@ -97,7 +97,9 @@ class ReservationFacadeTest {
         );
 
 
-        then(queueAdmissionService)
+        then(
+            queueAdmissionService
+        )
             .should()
             .isAdmitted(
                 CONCERT_ID,
@@ -105,19 +107,14 @@ class ReservationFacadeTest {
             );
 
 
-        then(reservationService)
+        then(
+            reservationService
+        )
             .should()
             .createReservation(
+                USER_ID,
                 request
             );
-
-
-        then(queueAdmissionService)
-            .shouldHaveNoMoreInteractions();
-
-
-        then(reservationService)
-            .shouldHaveNoMoreInteractions();
     }
 
 
@@ -128,10 +125,8 @@ class ReservationFacadeTest {
         ReservationRequest request =
             new ReservationRequest(
                 CONCERT_ID,
-                USER_ID,
-                100L
+                SEAT_ID
             );
-
 
         given(
             queueAdmissionService
@@ -149,14 +144,18 @@ class ReservationFacadeTest {
             () ->
                 reservationFacade
                     .createReservation(
+                        USER_ID,
                         request
                     )
-        ).isInstanceOf(
-            AdmissionRequiredException.class
-        );
+        )
+            .isInstanceOf(
+                AdmissionRequiredException.class
+            );
 
 
-        then(queueAdmissionService)
+        then(
+            queueAdmissionService
+        )
             .should()
             .isAdmitted(
                 CONCERT_ID,
@@ -164,123 +163,40 @@ class ReservationFacadeTest {
             );
 
 
-        then(reservationService)
+        then(
+            reservationService
+        )
             .shouldHaveNoInteractions();
-
-
-        then(queueAdmissionService)
-            .shouldHaveNoMoreInteractions();
     }
 
 
     @Test
-    void reservation이_실패해도_admission은_소비하거나_복구하지_않는다() {
-
-        // given
-        ReservationRequest request =
-            new ReservationRequest(
-                CONCERT_ID,
-                USER_ID,
-                100L
-            );
-
-
-        RuntimeException reservationException =
-            new RuntimeException(
-                "reservation failed"
-            );
-
-
-        given(
-            queueAdmissionService
-                .isAdmitted(
-                    CONCERT_ID,
-                    USER_ID
-                )
-        ).willReturn(
-            true
-        );
-
-
-        given(
-            reservationService
-                .createReservation(
-                    request
-                )
-        ).willThrow(
-            reservationException
-        );
-
-
-        // when + then
-        assertThatThrownBy(
-            () ->
-                reservationFacade
-                    .createReservation(
-                        request
-                    )
-        ).isSameAs(
-            reservationException
-        );
-
-
-        then(queueAdmissionService)
-            .should()
-            .isAdmitted(
-                CONCERT_ID,
-                USER_ID
-            );
-
-
-        then(reservationService)
-            .should()
-            .createReservation(
-                request
-            );
-
+    void admission은_예약후에도_소비하지_않는다() {
 
         /*
-         * QueueAdmissionService에는 isAdmitted() 외에
-         * claim / restore / complete 등이 아직 존재할 수 있다.
+         * 현재 ADMITTED의 의미는
+         * "5분 동안 예약 영역 접근 가능"이다.
          *
-         * shouldHaveNoMoreInteractions()를 통해
-         * ReservationFacade가 그 상태 변경 API를
-         * 전혀 호출하지 않는다는 것을 검증한다.
+         * 따라서 한 번 예약했다고 admission을
+         * consume하면 안 된다.
          */
-        then(queueAdmissionService)
-            .shouldHaveNoMoreInteractions();
 
-
-        then(reservationService)
-            .shouldHaveNoMoreInteractions();
-    }
-
-
-    @Test
-    void 하나의_admission으로_만료전까지_여러_좌석을_순차적으로_예약할_수_있다() {
-
-        // given
         ReservationRequest firstRequest =
             new ReservationRequest(
                 CONCERT_ID,
-                USER_ID,
                 100L
             );
-
 
         ReservationRequest secondRequest =
             new ReservationRequest(
                 CONCERT_ID,
-                USER_ID,
                 200L
             );
-
 
         ReservationResponse firstResponse =
             mock(
                 ReservationResponse.class
             );
-
 
         ReservationResponse secondResponse =
             mock(
@@ -288,10 +204,6 @@ class ReservationFacadeTest {
             );
 
 
-        /*
-         * 같은 admission window 안에서
-         * 두 reservation request 모두 admission이 유효하다.
-         */
         given(
             queueAdmissionService
                 .isAdmitted(
@@ -299,7 +211,6 @@ class ReservationFacadeTest {
                     USER_ID
                 )
         ).willReturn(
-            true,
             true
         );
 
@@ -307,6 +218,7 @@ class ReservationFacadeTest {
         given(
             reservationService
                 .createReservation(
+                    USER_ID,
                     firstRequest
                 )
         ).willReturn(
@@ -317,6 +229,7 @@ class ReservationFacadeTest {
         given(
             reservationService
                 .createReservation(
+                    USER_ID,
                     secondRequest
                 )
         ).willReturn(
@@ -325,38 +238,42 @@ class ReservationFacadeTest {
 
 
         // when
-        ReservationResponse firstResult =
+        ReservationResponse first =
             reservationFacade
                 .createReservation(
+                    USER_ID,
                     firstRequest
                 );
 
-
-        ReservationResponse secondResult =
+        ReservationResponse second =
             reservationFacade
                 .createReservation(
+                    USER_ID,
                     secondRequest
                 );
 
 
         // then
         assertThat(
-            firstResult
+            first
         ).isSameAs(
             firstResponse
         );
 
-
         assertThat(
-            secondResult
+            second
         ).isSameAs(
             secondResponse
         );
 
 
-        then(queueAdmissionService)
+        then(
+            queueAdmissionService
+        )
             .should(
-                times(2)
+                org.mockito.Mockito.times(
+                    2
+                )
             )
             .isAdmitted(
                 CONCERT_ID,
@@ -364,59 +281,42 @@ class ReservationFacadeTest {
             );
 
 
-        then(reservationService)
+        then(
+            reservationService
+        )
             .should()
             .createReservation(
+                USER_ID,
                 firstRequest
             );
 
 
-        then(reservationService)
+        then(
+            reservationService
+        )
             .should()
             .createReservation(
+                USER_ID,
                 secondRequest
             );
-
-
-        then(queueAdmissionService)
-            .shouldHaveNoMoreInteractions();
-
-
-        then(reservationService)
-            .shouldHaveNoMoreInteractions();
     }
 
 
     @Test
-    void 첫_예약후_admission이_만료되면_두번째_예약은_막힌다() {
+    void request에는_userId가_없고_별도_인증_identity를_사용한다() {
 
         // given
-        ReservationRequest firstRequest =
+        ReservationRequest request =
             new ReservationRequest(
                 CONCERT_ID,
-                USER_ID,
-                100L
+                SEAT_ID
             );
 
-
-        ReservationRequest secondRequest =
-            new ReservationRequest(
-                CONCERT_ID,
-                USER_ID,
-                200L
-            );
-
-
-        ReservationResponse firstResponse =
+        ReservationResponse expectedResponse =
             mock(
                 ReservationResponse.class
             );
 
-
-        /*
-         * 첫 번째 요청 시점에는 admission이 유효하지만,
-         * 두 번째 요청 시점에는 만료됐다고 가정한다.
-         */
         given(
             queueAdmissionService
                 .isAdmitted(
@@ -424,70 +324,39 @@ class ReservationFacadeTest {
                     USER_ID
                 )
         ).willReturn(
-            true,
-            false
+            true
         );
-
 
         given(
             reservationService
                 .createReservation(
-                    firstRequest
+                    USER_ID,
+                    request
                 )
         ).willReturn(
-            firstResponse
+            expectedResponse
         );
 
 
         // when
-        ReservationResponse firstResult =
-            reservationFacade
-                .createReservation(
-                    firstRequest
-                );
+        reservationFacade
+            .createReservation(
+                USER_ID,
+                request
+            );
 
 
         // then
-        assertThat(
-            firstResult
-        ).isSameAs(
-            firstResponse
-        );
-
-
-        assertThatThrownBy(
-            () ->
-                reservationFacade
-                    .createReservation(
-                        secondRequest
-                    )
-        ).isInstanceOf(
-            AdmissionRequiredException.class
-        );
-
-
-        then(queueAdmissionService)
-            .should(
-                times(2)
-            )
-            .isAdmitted(
-                CONCERT_ID,
-                USER_ID
-            );
-
-
-        then(reservationService)
+        then(
+            reservationService
+        )
             .should()
             .createReservation(
-                firstRequest
+                USER_ID,
+                new ReservationRequest(
+                    CONCERT_ID,
+                    SEAT_ID
+                )
             );
-
-
-        then(reservationService)
-            .shouldHaveNoMoreInteractions();
-
-
-        then(queueAdmissionService)
-            .shouldHaveNoMoreInteractions();
     }
 }
