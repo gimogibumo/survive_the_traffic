@@ -1,7 +1,10 @@
 package com.survive_the_traffic.reservation.service;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -9,6 +12,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import com.survive_the_traffic.common.exception.SeatConcertMismatchException;
+import com.survive_the_traffic.concert.domain.Concert;
 import com.survive_the_traffic.payment.domain.Payment;
 import com.survive_the_traffic.payment.domain.PaymentStatus;
 import com.survive_the_traffic.payment.dto.PaymentResponse;
@@ -29,6 +34,7 @@ import com.survive_the_traffic.seat.repository.SeatRepository;
 import com.survive_the_traffic.user.domain.User;
 import com.survive_the_traffic.user.exception.UserNotFoundException;
 import com.survive_the_traffic.user.repository.UserRepository;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -63,13 +69,18 @@ class ReservationServiceTest {
 
         // given
         Long userId = 1L;
+        Long concertId = 1L;
         Long seatId = 101L;
 
         ReservationRequest request =
-            new ReservationRequest(userId, seatId);
+            new ReservationRequest(concertId,userId, seatId);
 
         User user = mock(User.class);
         Seat seat = mock(Seat.class);
+        Concert concert = mock(Concert.class);
+
+        given(concert.getId()).willReturn(concertId);
+        given(seat.getConcert()).willReturn(concert);
 
         when(userRepository.findById(userId))
             .thenReturn(Optional.of(user));
@@ -135,10 +146,11 @@ class ReservationServiceTest {
 
         // given
         Long userId = 999L;
+        Long concertId = 1L;
         Long seatId = 101L;
 
         ReservationRequest request =
-            new ReservationRequest(userId, seatId);
+            new ReservationRequest(concertId,userId, seatId);
 
         when(userRepository.findById(userId))
             .thenReturn(Optional.empty());
@@ -164,7 +176,7 @@ class ReservationServiceTest {
         Long seatId = 999L;
 
         ReservationRequest request =
-            new ReservationRequest(userId, seatId);
+            new ReservationRequest(1L,userId, seatId);
 
         User user = mock(User.class);
 
@@ -195,10 +207,14 @@ class ReservationServiceTest {
         Long seatId = 101L;
 
         ReservationRequest request =
-            new ReservationRequest(userId, seatId);
+            new ReservationRequest(1L,userId, seatId);
 
         User user = mock(User.class);
+        Concert concert = mock(Concert.class);
         Seat seat = mock(Seat.class);
+
+        given(concert.getId()).willReturn(1L);
+        given(seat.getConcert()).willReturn(concert);
 
         when(userRepository.findById(userId))
             .thenReturn(Optional.of(user));
@@ -358,5 +374,60 @@ class ReservationServiceTest {
             .validatePayable(any(LocalDateTime.class));
 
         verifyNoInteractions(paymentRepository);
+    }
+
+    @Test
+    void 요청한_concert와_seat의_concert가_다르면_예약할_수_없다() {
+
+        // given
+        Long requestedConcertId = 1L;
+        Long actualConcertId = 2L;
+        Long userId = 10L;
+        Long seatId = 20L;
+
+        ReservationRequest request =
+            new ReservationRequest(
+                requestedConcertId,
+                userId,
+                seatId
+            );
+
+        User user = mock(User.class);
+        Seat seat = mock(Seat.class);
+        Concert actualConcert = mock(Concert.class);
+
+        given(userRepository.findById(userId))
+            .willReturn(Optional.of(user));
+
+        given(
+            seatRepository.findByIdWithPessimisticLock(seatId)
+        )
+            .willReturn(Optional.of(seat));
+
+        given(seat.getConcert())
+            .willReturn(actualConcert);
+
+        given(actualConcert.getId())
+            .willReturn(actualConcertId);
+
+        // when & then
+        assertThatThrownBy(
+            () -> reservationService.createReservation(request)
+        )
+            .isInstanceOf(SeatConcertMismatchException.class);
+
+        // mismatch인데 좌석 상태를 변경하면 안 됨
+        then(seat)
+            .should(never())
+            .hold();
+
+        // DB에 seat 변경 저장도 없어야 함
+        then(seatRepository)
+            .should(never())
+            .save(any(Seat.class));
+
+        // reservation 생성도 없어야 함
+        then(reservationRepository)
+            .shouldHaveNoInteractions();
     }
 }

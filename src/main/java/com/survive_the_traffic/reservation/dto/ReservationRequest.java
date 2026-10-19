@@ -5,6 +5,9 @@ import jakarta.annotation.Nonnull;
 public record ReservationRequest(
 
     @Nonnull
+    Long concertId,
+
+    @Nonnull
     Long userId,
 
     @Nonnull

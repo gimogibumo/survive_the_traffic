@@ -36,8 +36,11 @@ logging:
 
 server:
   tomcat:
+    mbeanregistry:
+      enabled: true
     threads:
       max: ${TOMCAT_MAX_THREADS:200}
+    accept-count: 300
 
 management:
   endpoints:

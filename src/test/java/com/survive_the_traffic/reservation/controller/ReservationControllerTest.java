@@ -1,10 +1,13 @@
 package com.survive_the_traffic.reservation.controller;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import com.survive_the_traffic.common.exception.AdmissionRequiredException;
+import com.survive_the_traffic.common.exception.SeatConcertMismatchException;
 import com.survive_the_traffic.payment.domain.PaymentStatus;
 import com.survive_the_traffic.payment.dto.PaymentResponse;
 import com.survive_the_traffic.reservation.domain.ReservationStatus;
@@ -13,6 +16,7 @@ import com.survive_the_traffic.reservation.dto.ReservationResponse;
 import com.survive_the_traffic.reservation.exception.ReservationExpiredException;
 import com.survive_the_traffic.reservation.exception.ReservationNotFoundException;
 import com.survive_the_traffic.reservation.exception.ReservationNotPendingException;
+import com.survive_the_traffic.reservation.service.ReservationFacade;
 import com.survive_the_traffic.reservation.service.ReservationService;
 import com.survive_the_traffic.seat.exception.SeatNotAvailableException;
 import com.survive_the_traffic.seat.exception.SeatNotFoundException;
@@ -24,6 +28,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
@@ -40,38 +45,75 @@ class ReservationControllerTest {
     @MockitoBean
     private ReservationService reservationService;
 
-    @Test
-    @DisplayName("예약을 생성한다")
-    void createReservation_success() throws Exception {
+    @MockitoBean
+    private ReservationFacade reservationFacade;
 
-        // given
+    @Test
+    void 예약을_생성한다() throws Exception {
+
         ReservationRequest request =
-            new ReservationRequest(1L, 101L);
+            new ReservationRequest(
+                1L,
+                10L,
+                100L
+            );
 
         ReservationResponse response =
             new ReservationResponse(
-                1001L,
-                101L,
+                1L,
+                100L,
                 ReservationStatus.PENDING,
-                LocalDateTime.of(2026, 8, 13, 12, 5)
+                LocalDateTime.now().plusMinutes(5)
             );
 
-        when(reservationService.createReservation(any(ReservationRequest.class)))
-            .thenReturn(response);
+        given(
+            reservationFacade.createReservation(
+                any(ReservationRequest.class)
+            )
+        ).willReturn(response);
 
-
-        // when & then
         mockMvc.perform(
                 post("/api/reservations")
-                    .contentType("application/json")
-                    .content(objectMapper.writeValueAsString(request))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                        {
+                          "concertId": 1,
+                          "userId": 10,
+                          "seatId": 100
+                        }
+                        """)
             )
-            .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.reservationId").value(1001))
-            .andExpect(jsonPath("$.seatId").value(101))
-            .andExpect(jsonPath("$.status").value("PENDING"))
-            .andExpect(jsonPath("$.expiresAt")
-                .value("2026-08-13T12:05:00"));
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.reservationId").value(1))
+            .andExpect(jsonPath("$.seatId").value(100));
+    }
+
+    @Test
+    void admission되지_않은_사용자의_예약요청은_차단한다()
+        throws Exception {
+
+        given(
+            reservationFacade.createReservation(
+                any(ReservationRequest.class)
+            )
+        ).willThrow(
+            new AdmissionRequiredException()
+        );
+
+        mockMvc.perform(
+                post("/api/reservations")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                    {
+                      "concertId": 1,
+                      "userId": 10,
+                      "seatId": 100
+                    }
+                    """)
+            )
+            .andExpect(
+                status().isTooManyRequests()
+            );
     }
 
     @Test
@@ -80,9 +122,9 @@ class ReservationControllerTest {
 
         // given
         ReservationRequest request =
-            new ReservationRequest(999L, 101L);
+            new ReservationRequest(1L,999L, 101L);
 
-        when(reservationService.createReservation(any(ReservationRequest.class)))
+        when(reservationFacade.createReservation(any(ReservationRequest.class)))
             .thenThrow(new UserNotFoundException());
 
 
@@ -102,9 +144,9 @@ class ReservationControllerTest {
     void createReservation_seatNotFound() throws Exception {
 
         ReservationRequest request =
-            new ReservationRequest(1L, 999L);
+            new ReservationRequest(1L,1L, 999L);
 
-        when(reservationService.createReservation(any(ReservationRequest.class)))
+        when(reservationFacade.createReservation(any(ReservationRequest.class)))
             .thenThrow(new SeatNotFoundException());
 
         mockMvc.perform(
@@ -122,9 +164,9 @@ class ReservationControllerTest {
     void createReservation_seatNotAvailable() throws Exception {
 
         ReservationRequest request =
-            new ReservationRequest(1L, 101L);
+            new ReservationRequest(1L,1L, 101L);
 
-        when(reservationService.createReservation(any(ReservationRequest.class)))
+        when(reservationFacade.createReservation(any(ReservationRequest.class)))
             .thenThrow(new SeatNotAvailableException());
 
         mockMvc.perform(
@@ -228,5 +270,33 @@ class ReservationControllerTest {
             .andExpect(status().isConflict())
             .andExpect(jsonPath("$.code")
                 .value("RESERVATION_EXPIRED"));
+    }
+
+    @Test
+    void concert와_seat가_일치하지_않으면_400을_반환한다()
+        throws Exception {
+
+        // given
+        given(
+            reservationFacade.createReservation(
+                any(ReservationRequest.class)
+            )
+        ).willThrow(
+            new SeatConcertMismatchException()
+        );
+
+        // when & then
+        mockMvc.perform(
+                post("/api/reservations")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                    {
+                      "concertId": 1,
+                      "userId": 10,
+                      "seatId": 20
+                    }
+                    """)
+            )
+            .andExpect(status().isBadRequest());
     }
 }
