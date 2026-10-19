@@ -34,9 +34,9 @@ public class ReservationService {
     private final PaymentRepository paymentRepository;
 
     @Transactional
-    public ReservationResponse createReservation(@Validated ReservationRequest request) {
+    public ReservationResponse createReservation(Long userId, @Validated ReservationRequest request) {
 
-        User user = userRepository.findById(request.userId()).orElseThrow(UserNotFoundException::new);
+        User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
         Seat seat = seatRepository.findByIdWithPessimisticLock(request.seatId()).orElseThrow(SeatNotFoundException::new);
 
         if(!seat.getConcert().getId().equals(request.concertId())) {

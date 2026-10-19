@@ -28,14 +28,12 @@ public class ReservationFacade {
 
 
     public ReservationResponse createReservation(
+        Long userId,
         ReservationRequest request
     ) {
 
         Long concertId =
             request.concertId();
-
-        Long userId =
-            request.userId();
 
 
         /*
@@ -73,8 +71,6 @@ public class ReservationFacade {
          * restore할 필요가 없다.
          */
         return reservationService
-            .createReservation(
-                request
-            );
+            .createReservation(userId, request);
     }
 }

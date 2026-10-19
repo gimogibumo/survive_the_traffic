@@ -43,9 +43,7 @@ class QueueStatusRepositoryTest {
             "queue:admitted:" + CONCERT_ID
         );
 
-        redisTemplate.delete(
-            "queue:active-concerts"
-        );
+        redisTemplate.opsForSet().remove("queue:active-concerts",CONCERT_ID.toString());
     }
 
     @Test

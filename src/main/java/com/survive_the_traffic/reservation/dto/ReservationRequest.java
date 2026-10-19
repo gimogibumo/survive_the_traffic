@@ -8,9 +8,6 @@ public record ReservationRequest(
     Long concertId,
 
     @Nonnull
-    Long userId,
-
-    @Nonnull
     Long seatId
 ) {
 
