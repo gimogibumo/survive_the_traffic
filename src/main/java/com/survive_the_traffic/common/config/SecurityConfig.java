@@ -1,5 +1,7 @@
 package com.survive_the_traffic.common.config;
 
+import java.util.List;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -12,54 +14,37 @@ import org.springframework.security.web.context.HttpSessionSecurityContextReposi
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
+@EnableConfigurationProperties(CorsProperties.class)
 public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(
         HttpSecurity http,
         SecurityContextRepository securityContextRepository,
-        CsrfTokenRepository csrfTokenRepository
+        CsrfTokenRepository csrfTokenRepository,
+        CorsConfigurationSource corsConfigurationSource
     ) throws Exception {
 
         http
+            .cors(cors -> cors.configurationSource(corsConfigurationSource))
             .authorizeHttpRequests(
-                authorize ->
-                    authorize
-
-                        /*
-                         * 인증 진입점
-                         */
-                        .requestMatchers(
-                            "/api/auth/signup",
-                            "/api/auth/login",
-                            "/api/csrf"
-                        )
-                        .permitAll()
-
-                        /*
-                         * 공연 조회는 비로그인 사용자도 가능
-                         */
-                        .requestMatchers(
-                            HttpMethod.GET,
-                            "/api/concerts/**"
-                        )
-                        .permitAll()
-
-                        /*
-                         * 그 외 API는 로그인 필요
-                         */
-                        .anyRequest()
-                        .authenticated()
+                authorize -> authorize
+                    .requestMatchers(
+                    "/api/auth/signup", "/api/auth/login", "/api/csrf").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/concerts/**").permitAll()
+                    .anyRequest().authenticated()
             )
 
             /*
              * 세션 기반 SecurityContext 저장
              */
             .securityContext(
-                securityContext ->
-                    securityContext
+                securityContext -> securityContext
                         .securityContextRepository(
                             securityContextRepository
                         )
@@ -68,55 +53,41 @@ public class SecurityConfig {
             /*
              * SPA + Cookie 기반 CSRF
              */
-            .csrf(
-                csrf ->
-                    csrf
-                        .spa()
-                        .csrfTokenRepository(
-                            csrfTokenRepository
-                        )
+            .csrf(csrf -> csrf
+                .spa()
+                .csrfTokenRepository(
+                    csrfTokenRepository
+                )
             )
 
             /*
              * REST API에서는 인증되지 않은 요청에
              * redirect가 아니라 401을 반환
              */
-            .exceptionHandling(
-                exception ->
-                    exception
-                        .authenticationEntryPoint(
-                            new HttpStatusEntryPoint(
-                                HttpStatus.UNAUTHORIZED
-                            )
-                        )
+            .exceptionHandling(exception ->
+                exception
+                    .authenticationEntryPoint(
+                        new HttpStatusEntryPoint(
+                            HttpStatus.UNAUTHORIZED))
             )
 
             /*
              * Spring Security logout pipeline
              */
-            .logout(
-                logout ->
-                    logout
-                        .logoutUrl(
-                            "/api/auth/logout"
-                        )
-                        .logoutSuccessHandler(
-                            new HttpStatusReturningLogoutSuccessHandler(
-                                HttpStatus.NO_CONTENT
-                            )
-                        )
-                        .permitAll()
+            .logout(logout -> logout
+                .logoutUrl(
+                    "/api/auth/logout"
+                )
+                .logoutSuccessHandler(
+                    new HttpStatusReturningLogoutSuccessHandler(
+                        HttpStatus.NO_CONTENT
+                    )
+                )
+                .permitAll()
             )
 
-            .httpBasic(
-                httpBasic ->
-                    httpBasic.disable()
-            )
-
-            .formLogin(
-                formLogin ->
-                    formLogin.disable()
-            );
+            .httpBasic(httpBasic -> httpBasic.disable())
+            .formLogin(formLogin -> formLogin.disable());
 
         return http.build();
     }
@@ -132,5 +103,25 @@ public class SecurityConfig {
 
         return CookieCsrfTokenRepository
             .withHttpOnlyFalse();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource(CorsProperties corsProperties) {
+
+        CorsConfiguration configuration = new CorsConfiguration();
+
+        configuration.setAllowedOrigins(corsProperties.allowedOrigins());
+
+        configuration.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
+
+        configuration.setAllowedHeaders(List.of("Content-type","X-XSRF-TOKEN"));
+
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+
+        source.registerCorsConfiguration("/**", configuration);
+
+        return source;
     }
 }
