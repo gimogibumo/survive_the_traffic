@@ -7,6 +7,11 @@ import com.survive_the_traffic.queue.entity.QueueStatus;
 import com.survive_the_traffic.queue.entity.WaitingQueueJoinStatus;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -1135,6 +1140,544 @@ class WaitingQueueRepositoryTest {
             0L
         );
     }
+
+    @Test
+    void admit과_rejoin이_동시에_실행되어도_최종상태는_ADMITTED_only이다()
+        throws Exception {
+
+        Long userId = 10L;
+
+        int repeatCount = 100;
+
+
+        for (int i = 0; i < repeatCount; i++) {
+
+            /*
+             * 각 race 실험을 독립적으로 만든다.
+             */
+            redisTemplate.delete(
+                "queue:waiting:" + CONCERT_ID
+            );
+
+            redisTemplate.delete(
+                "queue:sequence:" + CONCERT_ID
+            );
+
+            redisTemplate.delete(
+                "queue:admitted:" + CONCERT_ID
+            );
+
+            redisTemplate.opsForSet()
+                .remove(
+                    "queue:active-concerts",
+                    CONCERT_ID.toString()
+                );
+
+
+            /*
+             * given
+             *
+             * user는 먼저 WAITING 상태에 둔다.
+             */
+            WaitingQueueJoinResult initialJoin =
+                waitingQueueRepository.join(
+                    CONCERT_ID,
+                    userId
+                );
+
+
+            assertThat(
+                initialJoin.status()
+            ).isEqualTo(
+                WaitingQueueJoinStatus.JOINED
+            );
+
+
+            assertThat(
+                waitingQueueRepository.getRank(
+                    CONCERT_ID,
+                    userId
+                )
+            ).isEqualTo(
+                0L
+            );
+
+
+            ExecutorService executorService =
+                Executors.newFixedThreadPool(2);
+
+
+            CountDownLatch readyLatch =
+                new CountDownLatch(2);
+
+            CountDownLatch startLatch =
+                new CountDownLatch(1);
+
+
+            try {
+
+                /*
+                 * Thread A
+                 *
+                 * Worker 역할:
+                 * WAITING -> ADMITTED
+                 */
+                Future<List<Long>> admitFuture =
+                    executorService.submit(
+                        () -> {
+
+                            readyLatch.countDown();
+
+                            startLatch.await();
+
+                            return queueAdmissionRepository
+                                .admit(
+                                    CONCERT_ID,
+                                    1L
+                                );
+                        }
+                    );
+
+
+                /*
+                 * Thread B
+                 *
+                 * 사용자가 동시에 다시 join을 호출한다.
+                 */
+                Future<WaitingQueueJoinResult> rejoinFuture =
+                    executorService.submit(
+                        () -> {
+
+                            readyLatch.countDown();
+
+                            startLatch.await();
+
+                            return waitingQueueRepository
+                                .join(
+                                    CONCERT_ID,
+                                    userId
+                                );
+                        }
+                    );
+
+
+                /*
+                 * 두 thread가 모두 준비될 때까지 기다린 뒤
+                 * 최대한 같은 시점에 시작시킨다.
+                 */
+                boolean ready =
+                    readyLatch.await(
+                        3,
+                        TimeUnit.SECONDS
+                    );
+
+
+                assertThat(ready)
+                    .isTrue();
+
+
+                startLatch.countDown();
+
+
+                List<Long> admittedUsers =
+                    admitFuture.get(
+                        3,
+                        TimeUnit.SECONDS
+                    );
+
+
+                WaitingQueueJoinResult rejoinResult =
+                    rejoinFuture.get(
+                        3,
+                        TimeUnit.SECONDS
+                    );
+
+
+                /*
+                 * admit은 반드시 이 사용자를 ADMITTED로 이동시켜야 한다.
+                 */
+                assertThat(
+                    admittedUsers
+                ).containsExactly(
+                    userId
+                );
+
+
+                /*
+                 * race 순서에 따라 rejoin 결과는 둘 중 하나다.
+                 *
+                 * 1. rejoin이 먼저 실행:
+                 *    ALREADY_WAITING
+                 *
+                 * 2. admit이 먼저 실행:
+                 *    ALREADY_ADMITTED
+                 */
+                assertThat(
+                    rejoinResult.status()
+                ).isIn(
+                    WaitingQueueJoinStatus.ALREADY_WAITING,
+                    WaitingQueueJoinStatus.ALREADY_ADMITTED
+                );
+
+
+                /*
+                 * 핵심 invariant 1:
+                 *
+                 * 최종적으로 waiting에는 없어야 한다.
+                 */
+                assertThat(
+                    waitingQueueRepository.getRank(
+                        CONCERT_ID,
+                        userId
+                    )
+                ).isNull();
+
+
+                assertThat(
+                    waitingQueueRepository.getSize(
+                        CONCERT_ID
+                    )
+                ).isZero();
+
+
+                /*
+                 * 핵심 invariant 2:
+                 *
+                 * admitted에는 반드시 존재해야 한다.
+                 */
+                Double admittedScore =
+                    redisTemplate
+                        .opsForZSet()
+                        .score(
+                            "queue:admitted:"
+                                + CONCERT_ID,
+                            userId.toString()
+                        );
+
+
+                assertThat(
+                    admittedScore
+                ).isNotNull();
+
+
+                assertThat(
+                    admittedScore
+                ).isGreaterThan(
+                    (double) System.currentTimeMillis()
+                );
+
+
+                /*
+                 * 핵심 invariant 3:
+                 *
+                 * 외부에서 조회하는 logical status 역시
+                 * ADMITTED여야 한다.
+                 */
+                QueueStatusResult statusResult =
+                    queueStatusRepository
+                        .getStatus(
+                            CONCERT_ID,
+                            userId
+                        );
+
+
+                assertThat(
+                    statusResult.status()
+                ).isEqualTo(
+                    QueueStatus.ADMITTED
+                );
+
+
+                assertThat(
+                    statusResult.rank()
+                ).isNull();
+
+
+                assertThat(
+                    statusResult.waitingCount()
+                ).isZero();
+
+            } finally {
+
+                executorService.shutdownNow();
+
+                executorService.awaitTermination(
+                    3,
+                    TimeUnit.SECONDS
+                );
+            }
+        }
+    }
+
+    @Test
+    void 만료된_admission에_동시에_rejoin해도_waiting에는_한번만_등록된다()
+        throws Exception {
+
+        Long userId = 10L;
+
+        int repeatCount = 100;
+
+
+        for (int i = 0; i < repeatCount; i++) {
+
+            /*
+             * 각 race 실험을 독립적인 Redis 상태에서 시작한다.
+             */
+            redisTemplate.delete(
+                "queue:waiting:" + CONCERT_ID
+            );
+
+            redisTemplate.delete(
+                "queue:sequence:" + CONCERT_ID
+            );
+
+            redisTemplate.delete(
+                "queue:admitted:" + CONCERT_ID
+            );
+
+            redisTemplate.opsForSet()
+                .remove(
+                    "queue:active-concerts",
+                    CONCERT_ID.toString()
+                );
+
+
+            /*
+             * given
+             *
+             * 사용자는 admitted ZSET에는 존재하지만
+             * expiresAt은 이미 지난 상태다.
+             */
+            redisTemplate.opsForZSet()
+                .add(
+                    "queue:admitted:" + CONCERT_ID,
+                    userId.toString(),
+                    System.currentTimeMillis() - 10_000
+                );
+
+
+            Double expiredAdmissionScore =
+                redisTemplate.opsForZSet()
+                    .score(
+                        "queue:admitted:" + CONCERT_ID,
+                        userId.toString()
+                    );
+
+
+            assertThat(
+                expiredAdmissionScore
+            ).isNotNull();
+
+
+            ExecutorService executorService =
+                Executors.newFixedThreadPool(2);
+
+
+            CountDownLatch readyLatch =
+                new CountDownLatch(2);
+
+            CountDownLatch startLatch =
+                new CountDownLatch(1);
+
+
+            try {
+
+                Future<WaitingQueueJoinResult> firstFuture =
+                    executorService.submit(
+                        () -> {
+
+                            readyLatch.countDown();
+
+                            startLatch.await();
+
+                            return waitingQueueRepository
+                                .join(
+                                    CONCERT_ID,
+                                    userId
+                                );
+                        }
+                    );
+
+
+                Future<WaitingQueueJoinResult> secondFuture =
+                    executorService.submit(
+                        () -> {
+
+                            readyLatch.countDown();
+
+                            startLatch.await();
+
+                            return waitingQueueRepository
+                                .join(
+                                    CONCERT_ID,
+                                    userId
+                                );
+                        }
+                    );
+
+
+                boolean ready =
+                    readyLatch.await(
+                        3,
+                        TimeUnit.SECONDS
+                    );
+
+
+                assertThat(
+                    ready
+                ).isTrue();
+
+
+                startLatch.countDown();
+
+
+                WaitingQueueJoinResult firstResult =
+                    firstFuture.get(
+                        3,
+                        TimeUnit.SECONDS
+                    );
+
+
+                WaitingQueueJoinResult secondResult =
+                    secondFuture.get(
+                        3,
+                        TimeUnit.SECONDS
+                    );
+
+
+                /*
+                 * 두 요청 중 정확히 하나만 신규 JOIN이어야 한다.
+                 *
+                 * Redis Lua script는 atomic하게 실행되므로:
+                 *
+                 * 첫 번째 script:
+                 * expired ADMITTED 제거
+                 * -> waiting 신규 등록
+                 * -> JOINED
+                 *
+                 * 두 번째 script:
+                 * waiting 존재 확인
+                 * -> ALREADY_WAITING
+                 */
+                List<WaitingQueueJoinStatus> statuses =
+                    List.of(
+                        firstResult.status(),
+                        secondResult.status()
+                    );
+
+
+                assertThat(
+                    statuses
+                ).containsExactlyInAnyOrder(
+                    WaitingQueueJoinStatus.JOINED,
+                    WaitingQueueJoinStatus.ALREADY_WAITING
+                );
+
+
+                /*
+                 * 최종 waiting entry는 하나뿐이다.
+                 */
+                assertThat(
+                    waitingQueueRepository.getSize(
+                        CONCERT_ID
+                    )
+                ).isEqualTo(
+                    1L
+                );
+
+
+                assertThat(
+                    waitingQueueRepository.getRank(
+                        CONCERT_ID,
+                        userId
+                    )
+                ).isEqualTo(
+                    0L
+                );
+
+
+                /*
+                 * sequence 역시 딱 한 번만 소비되어야 한다.
+                 *
+                 * 중복 rejoin이 sequence까지 증가시키면
+                 * queue ordering에 불필요한 gap이 생긴다.
+                 */
+                String sequence =
+                    redisTemplate.opsForValue()
+                        .get(
+                            "queue:sequence:"
+                                + CONCERT_ID
+                        );
+
+
+                assertThat(
+                    sequence
+                ).isEqualTo(
+                    "1"
+                );
+
+
+                /*
+                 * 만료된 admission entry는 제거되어야 한다.
+                 */
+                Double admittedScoreAfterRace =
+                    redisTemplate.opsForZSet()
+                        .score(
+                            "queue:admitted:"
+                                + CONCERT_ID,
+                            userId.toString()
+                        );
+
+
+                assertThat(
+                    admittedScoreAfterRace
+                ).isNull();
+
+
+                /*
+                 * 외부 logical status도 WAITING이어야 한다.
+                 */
+                QueueStatusResult statusResult =
+                    queueStatusRepository
+                        .getStatus(
+                            CONCERT_ID,
+                            userId
+                        );
+
+
+                assertThat(
+                    statusResult.status()
+                ).isEqualTo(
+                    QueueStatus.WAITING
+                );
+
+
+                assertThat(
+                    statusResult.rank()
+                ).isEqualTo(
+                    0L
+                );
+
+
+                assertThat(
+                    statusResult.waitingCount()
+                ).isEqualTo(
+                    1L
+                );
+
+            } finally {
+
+                executorService.shutdownNow();
+
+                executorService.awaitTermination(
+                    3,
+                    TimeUnit.SECONDS
+                );
+            }
+        }
+    }
+
+
 
 
     /*

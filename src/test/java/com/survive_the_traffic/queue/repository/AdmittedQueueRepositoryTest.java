@@ -117,4 +117,77 @@ class AdmittedQueueRepositoryTest {
 
         assertThat(expiresAt).isBetween(before + fiveMinutes, after + fiveMinutes);
     }
+
+    @Test
+    void 만료된_admission은_논리적으로는_무효지만_Redis에는_남아있는지_확인한다() {
+
+        // given
+        Long concertId = 1L;
+        Long userId = 10L;
+
+        String admittedKey =
+            "queue:admitted:" + concertId;
+
+        long expiredAt =
+            System.currentTimeMillis() - 10_000;
+
+
+        redisTemplate.opsForZSet()
+            .add(
+                admittedKey,
+                userId.toString(),
+                expiredAt
+            );
+
+
+        Double scoreBeforeCheck =
+            redisTemplate.opsForZSet()
+                .score(
+                    admittedKey,
+                    userId.toString()
+                );
+
+
+        assertThat(
+            scoreBeforeCheck
+        ).isNotNull();
+
+
+        // when
+        boolean admitted =
+            admittedQueueRepository
+                .isAdmitted(
+                    concertId,
+                    userId
+                );
+
+
+        // then
+        /*
+         * 논리적으로는 이미 만료되었으므로
+         * admission은 유효하지 않아야 한다.
+         */
+        assertThat(
+            admitted
+        ).isFalse();
+
+
+        /*
+         * 여기서는 현재 구현의 물리적 상태를 확인한다.
+         *
+         * score가 그대로 남아 있으면
+         * expired admission을 조회 시 제거하지 않는 구조다.
+         */
+        Double scoreAfterCheck =
+            redisTemplate.opsForZSet()
+                .score(
+                    admittedKey,
+                    userId.toString()
+                );
+
+
+        assertThat(
+            scoreAfterCheck
+        ).isNotNull();
+    }
 }

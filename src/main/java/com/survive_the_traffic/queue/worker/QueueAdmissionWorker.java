@@ -12,7 +12,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConditionalOnProperty(name = "queue.admission-worder.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(name = "queue.admission-worker.enabled", havingValue = "true", matchIfMissing = true)
 @RequiredArgsConstructor
 public class QueueAdmissionWorker {
 
