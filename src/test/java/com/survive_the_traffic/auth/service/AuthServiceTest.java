@@ -203,4 +203,72 @@ class AuthServiceTest {
                 DuplicateEmailException.class
             );
     }
+
+    @Test
+    void 이메일은_소문자로_정규화하여_저장한다() {
+
+        // given
+        SignupRequest request =
+            new SignupRequest(
+                "Kim@Example.COM",
+                "password1234",
+                "기범"
+            );
+
+        given(
+            userRepository.existsByEmail(
+                "kim@example.com"
+            )
+        ).willReturn(false);
+
+        given(
+            passwordEncoder.encode(
+                request.password()
+            )
+        ).willReturn(
+            "encoded-password"
+        );
+
+        given(
+            userRepository.saveAndFlush(
+                any(User.class)
+            )
+        ).willAnswer(
+            invocation -> {
+                User user =
+                    invocation.getArgument(0);
+
+                user.setId(1L);
+
+                return user;
+            }
+        );
+
+        // when
+        SignupResponse response =
+            authService.signup(request);
+
+        // then
+        ArgumentCaptor<User> captor =
+            ArgumentCaptor.forClass(
+                User.class
+            );
+
+        verify(userRepository)
+            .saveAndFlush(
+                captor.capture()
+            );
+
+        assertThat(
+            captor.getValue().getEmail()
+        ).isEqualTo(
+            "kim@example.com"
+        );
+
+        assertThat(
+            response.email()
+        ).isEqualTo(
+            "kim@example.com"
+        );
+    }
 }

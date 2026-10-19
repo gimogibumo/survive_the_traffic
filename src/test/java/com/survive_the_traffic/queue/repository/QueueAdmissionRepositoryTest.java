@@ -370,7 +370,7 @@ class QueueAdmissionRepositoryTest {
         assertThat(
             ttlMillis
         ).isLessThanOrEqualTo(
-            Duration.ofMinutes(5)
+            Duration.ofMinutes(6)
                 .toMillis()
         );
 

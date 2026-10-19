@@ -6,6 +6,12 @@ import org.springframework.http.HttpStatus;
 @Getter
 public enum ErrorCode {
 
+    INVALID_CREDENTIALS(
+        HttpStatus.UNAUTHORIZED,
+        "INVALID_CREDENTIALS",
+        "이메일 또는 비밀번호가 올바르지 않습니다."
+    ),
+
     INVALID_REQUEST(
         HttpStatus.BAD_REQUEST,
         "INVALID_REQUEST",

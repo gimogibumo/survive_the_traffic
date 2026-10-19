@@ -1,15 +1,20 @@
 package com.survive_the_traffic.auth.controller;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.survive_the_traffic.auth.dto.LoginRequest;
+import com.survive_the_traffic.auth.dto.LoginResponse;
 import com.survive_the_traffic.auth.dto.SignupRequest;
 import com.survive_the_traffic.auth.dto.SignupResponse;
 import com.survive_the_traffic.auth.exception.DuplicateEmailException;
+import com.survive_the_traffic.auth.exception.InvalidCredentialsException;
 import com.survive_the_traffic.auth.service.AuthService;
+import com.survive_the_traffic.auth.service.SessionLoginService;
 import com.survive_the_traffic.common.config.SecurityConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +37,9 @@ class AuthControllerTest {
 
     @MockitoBean
     private AuthService authService;
+
+    @MockitoBean
+    private SessionLoginService sessionLoginService;
 
     @Test
     void 회원가입에_성공하면_201을_반환한다()
@@ -228,6 +236,113 @@ class AuthControllerTest {
             .andExpect(
                 jsonPath("$.code")
                     .value("INVALID_REQUEST")
+            );
+    }
+
+    @Test
+    void 로그인에_성공하면_200을_반환한다()
+        throws Exception {
+
+        // given
+        LoginRequest request =
+            new LoginRequest(
+                "kim@example.com",
+                "password1234"
+            );
+
+        LoginResponse response =
+            new LoginResponse(
+                1L,
+                "kim@example.com",
+                "기범"
+            );
+
+        given(
+            sessionLoginService.login(
+                any(LoginRequest.class),
+                any(),
+                any()
+            )
+        ).willReturn(response);
+
+        // when / then
+        mockMvc.perform(
+                post("/api/auth/login")
+                    .with(csrf())
+                    .contentType(
+                        MediaType.APPLICATION_JSON
+                    )
+                    .content(
+                        objectMapper.writeValueAsString(
+                            request
+                        )
+                    )
+            )
+            .andExpect(
+                status().isOk()
+            )
+            .andExpect(
+                jsonPath("$.id")
+                    .value(1L)
+            )
+            .andExpect(
+                jsonPath("$.email")
+                    .value("kim@example.com")
+            )
+            .andExpect(
+                jsonPath("$.name")
+                    .value("기범")
+            );
+    }
+
+    @Test
+    void 로그인_정보가_올바르지_않으면_401을_반환한다()
+        throws Exception {
+
+        // given
+        LoginRequest request =
+            new LoginRequest(
+                "kim@example.com",
+                "wrong-password"
+            );
+
+        given(
+            sessionLoginService.login(
+                any(LoginRequest.class),
+                any(),
+                any()
+            )
+        ).willThrow(
+            new InvalidCredentialsException()
+        );
+
+        // when / then
+        mockMvc.perform(
+                post("/api/auth/login")
+                    .with(csrf())
+                    .contentType(
+                        MediaType.APPLICATION_JSON
+                    )
+                    .content(
+                        objectMapper.writeValueAsString(
+                            request
+                        )
+                    )
+            )
+            .andExpect(
+                status().isUnauthorized()
+            )
+            .andExpect(
+                jsonPath("$.code")
+                    .value(
+                        "INVALID_CREDENTIALS"
+                    )
+            )
+            .andExpect(
+                jsonPath("$.message")
+                    .value(
+                        "이메일 또는 비밀번호가 올바르지 않습니다."
+                    )
             );
     }
 }
