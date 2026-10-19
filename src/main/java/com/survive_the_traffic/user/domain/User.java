@@ -7,7 +7,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
-import java.util.Date;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -27,13 +26,18 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
+    @Column(
+        unique = true,
+        nullable = false
+    )
     private String email;
 
     @Column(nullable = false)
     private String name;
 
+    @Column(name = "password_hash")
+    private String passwordHash;
+
     @Column(nullable = false)
     private LocalDateTime createdAt;
-
 }
