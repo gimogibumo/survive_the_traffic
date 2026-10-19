@@ -7,6 +7,7 @@ import com.survive_the_traffic.user.domain.User;
 import com.survive_the_traffic.user.repository.UserRepository;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,24 +20,42 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public SignupResponse signup(SignupRequest request) {
-
-        if(userRepository.existsByEmail(request.email())) {
+    public SignupResponse signup(
+        SignupRequest request
+    ) {
+        if (
+            userRepository.existsByEmail(
+                request.email()
+            )
+        ) {
             throw new DuplicateEmailException();
         }
 
-        String passwordHash = passwordEncoder.encode(request.password());
+        String passwordHash =
+            passwordEncoder.encode(
+                request.password()
+            );
 
-        User user = User.builder()
-            .email(request.email())
-            .name(request.name())
-            .passwordHash(passwordHash)
-            .createdAt(LocalDateTime.now())
-            .build();
+        User user =
+            User.builder()
+                .email(request.email())
+                .name(request.name())
+                .passwordHash(passwordHash)
+                .createdAt(LocalDateTime.now())
+                .build();
 
-        User savedUser = userRepository.save(user);
+        try {
+            User savedUser =
+                userRepository.saveAndFlush(user);
 
-        return SignupResponse.from(savedUser);
+            return SignupResponse.from(
+                savedUser
+            );
+
+        } catch (
+            DataIntegrityViolationException e
+        ) {
+            throw new DuplicateEmailException();
+        }
     }
-
 }

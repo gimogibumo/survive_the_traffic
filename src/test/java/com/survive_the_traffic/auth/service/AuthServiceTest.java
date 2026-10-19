@@ -11,12 +11,12 @@ import com.survive_the_traffic.auth.dto.SignupResponse;
 import com.survive_the_traffic.auth.exception.DuplicateEmailException;
 import com.survive_the_traffic.user.domain.User;
 import com.survive_the_traffic.user.repository.UserRepository;
-import java.time.LocalDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 class AuthServiceTest {
@@ -66,7 +66,7 @@ class AuthServiceTest {
         );
 
         given(
-            userRepository.save(any(User.class))
+            userRepository.saveAndFlush(any(User.class))
         ).willAnswer(
             invocation -> {
 
@@ -90,7 +90,7 @@ class AuthServiceTest {
             );
 
         verify(userRepository)
-            .save(
+            .saveAndFlush(
                 userCaptor.capture()
             );
 
@@ -150,6 +150,50 @@ class AuthServiceTest {
                 request.email()
             )
         ).willReturn(true);
+
+        // when / then
+        assertThatThrownBy(
+            () -> authService.signup(request)
+        )
+            .isInstanceOf(
+                DuplicateEmailException.class
+            );
+    }
+
+    @Test
+    void 사전_중복검사를_통과했더라도_DB에서_중복이_발생하면_중복이메일_예외로_변환한다() {
+
+        // given
+        SignupRequest request =
+            new SignupRequest(
+                "kim@example.com",
+                "password1234",
+                "기범"
+            );
+
+        given(
+            userRepository.existsByEmail(
+                request.email()
+            )
+        ).willReturn(false);
+
+        given(
+            passwordEncoder.encode(
+                request.password()
+            )
+        ).willReturn(
+            "encoded-password"
+        );
+
+        given(
+            userRepository.saveAndFlush(
+                any(User.class)
+            )
+        ).willThrow(
+            new DataIntegrityViolationException(
+                "duplicate email"
+            )
+        );
 
         // when / then
         assertThatThrownBy(
