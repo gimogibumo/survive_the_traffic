@@ -2,6 +2,7 @@ package com.survive_the_traffic.reservation.controller;
 
 import com.survive_the_traffic.auth.security.AuthenticatedUser;
 import com.survive_the_traffic.payment.dto.PaymentResponse;
+import com.survive_the_traffic.reservation.dto.ReservationDetailResponse;
 import com.survive_the_traffic.reservation.dto.ReservationRequest;
 import com.survive_the_traffic.reservation.dto.ReservationResponse;
 import com.survive_the_traffic.reservation.service.ReservationFacade;
@@ -10,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -45,6 +47,14 @@ public class ReservationController {
             );
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{reservationId}")
+    public ResponseEntity<ReservationDetailResponse> getReservation(
+        @PathVariable Long reservationId,
+        @AuthenticationPrincipal AuthenticatedUser authenticatedUser
+    ){
+        return ResponseEntity.ok(reservationService.getReservation(authenticatedUser.getUserId(),reservationId));
     }
 
 }

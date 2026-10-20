@@ -2,6 +2,7 @@ package com.survive_the_traffic.reservation.dto;
 
 import com.survive_the_traffic.reservation.domain.Reservation;
 import com.survive_the_traffic.reservation.domain.ReservationStatus;
+import java.time.LocalDateTime;
 
 public record ReservationDetailResponse(
     Long reservationId,
@@ -10,7 +11,8 @@ public record ReservationDetailResponse(
     Integer row,
     Integer seatNumber,
     Long price,
-    ReservationStatus status) {
+    ReservationStatus status,
+    LocalDateTime expiresAt) {
     public static ReservationDetailResponse from(Reservation reservation) {
         return new ReservationDetailResponse(
             reservation.getId(),
@@ -19,7 +21,8 @@ public record ReservationDetailResponse(
             reservation.getSeat().getRowNumber(),
             reservation.getSeat().getSeatNumber(),
             reservation.getSeat().getPrice(),
-            reservation.getStatus()
+            reservation.getStatus(),
+            reservation.getExpiresAt()
         );
     }
 }

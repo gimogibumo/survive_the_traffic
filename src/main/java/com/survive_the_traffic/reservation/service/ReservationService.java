@@ -4,6 +4,7 @@ import com.survive_the_traffic.common.exception.SeatConcertMismatchException;
 import com.survive_the_traffic.payment.domain.Payment;
 import com.survive_the_traffic.payment.dto.PaymentResponse;
 import com.survive_the_traffic.payment.repository.PaymentRepository;
+import com.survive_the_traffic.reservation.dto.ReservationDetailResponse;
 import com.survive_the_traffic.reservation.exception.ReservationNotFoundException;
 import com.survive_the_traffic.reservation.domain.Reservation;
 import com.survive_the_traffic.reservation.domain.ReservationStatus;
@@ -91,6 +92,14 @@ public class ReservationService {
             savedPayment.getStatus(),
             savedPayment.getAmount()
         );
+    }
+
+    @Transactional(readOnly = true)
+    public ReservationDetailResponse getReservation(Long userId, Long reservationId) {
+
+        Reservation reservation = reservationRepository.findByIdAndUser_Id(reservationId,userId)
+            .orElseThrow(ReservationNotFoundException::new);
+        return ReservationDetailResponse.from(reservation);
     }
 
 }
