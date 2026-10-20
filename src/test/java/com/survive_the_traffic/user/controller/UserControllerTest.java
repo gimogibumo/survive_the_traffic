@@ -49,7 +49,8 @@ class UserControllerTest {
                 1,
                 10,
                 150000L,
-                ReservationStatus.PENDING
+                ReservationStatus.PENDING,
+                LocalDateTime.now().plusMinutes(10)
             );
 
         ReservationDetailResponse reservation2 =
@@ -60,7 +61,8 @@ class UserControllerTest {
                 2,
                 5,
                 120000L,
-                ReservationStatus.CONFIRMED
+                ReservationStatus.CONFIRMED,
+                LocalDateTime.now().plusMinutes(10)
             );
 
         when(

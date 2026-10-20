@@ -15,6 +15,7 @@ import com.survive_the_traffic.payment.dto.PaymentResponse;
 import com.survive_the_traffic.payment.repository.PaymentRepository;
 import com.survive_the_traffic.reservation.domain.Reservation;
 import com.survive_the_traffic.reservation.domain.ReservationStatus;
+import com.survive_the_traffic.reservation.dto.ReservationDetailResponse;
 import com.survive_the_traffic.reservation.dto.ReservationRequest;
 import com.survive_the_traffic.reservation.dto.ReservationResponse;
 import com.survive_the_traffic.reservation.exception.ReservationNotFoundException;
@@ -687,5 +688,215 @@ class ReservationServiceTest {
         )
             .should()
             .sell();
+    }
+
+    @Test
+    void 인증된_사용자는_자신의_예약_상세를_조회할_수_있다() {
+
+        // given
+        Long reservationId = 1000L;
+        LocalDateTime expiresAt =
+            LocalDateTime.of(
+                2026,
+                10,
+                20,
+                14,
+                30
+            );
+
+        Reservation reservation =
+            mock(
+                Reservation.class
+            );
+
+        Seat seat =
+            mock(
+                Seat.class
+            );
+
+        Concert concert =
+            mock(
+                Concert.class
+            );
+
+        given(
+            reservationRepository
+                .findByIdAndUser_Id(
+                    reservationId,
+                    USER_ID
+                )
+        ).willReturn(
+            Optional.of(
+                reservation
+            )
+        );
+
+        given(
+            reservation.getId()
+        ).willReturn(
+            reservationId
+        );
+
+        given(
+            reservation.getSeat()
+        ).willReturn(
+            seat
+        );
+
+        given(
+            seat.getConcert()
+        ).willReturn(
+            concert
+        );
+
+        given(
+            concert.getTitle()
+        ).willReturn(
+            "Survive the Traffic Live"
+        );
+
+        given(
+            seat.getSection()
+        ).willReturn(
+            "A"
+        );
+
+        given(
+            seat.getRowNumber()
+        ).willReturn(
+            3
+        );
+
+        given(
+            seat.getSeatNumber()
+        ).willReturn(
+            12
+        );
+
+        given(
+            seat.getPrice()
+        ).willReturn(
+            150000L
+        );
+
+        given(
+            reservation.getStatus()
+        ).willReturn(
+            ReservationStatus.PENDING
+        );
+
+        given(
+            reservation.getExpiresAt()
+        ).willReturn(
+            expiresAt
+        );
+
+
+        // when
+        ReservationDetailResponse response =
+            reservationService.getReservation(
+                USER_ID,
+                reservationId
+            );
+
+
+        // then
+        assertThat(
+            response.reservationId()
+        ).isEqualTo(
+            reservationId
+        );
+
+        assertThat(
+            response.concertTitle()
+        ).isEqualTo(
+            "Survive the Traffic Live"
+        );
+
+        assertThat(
+            response.section()
+        ).isEqualTo(
+            "A"
+        );
+
+        assertThat(
+            response.row()
+        ).isEqualTo(
+            3
+        );
+
+        assertThat(
+            response.seatNumber()
+        ).isEqualTo(
+            12
+        );
+
+        assertThat(
+            response.price()
+        ).isEqualTo(
+            150000L
+        );
+
+        assertThat(
+            response.status()
+        ).isEqualTo(
+            ReservationStatus.PENDING
+        );
+
+        assertThat(
+            response.expiresAt()
+        ).isEqualTo(
+            expiresAt
+        );
+
+        then(
+            reservationRepository
+        )
+            .should()
+            .findByIdAndUser_Id(
+                reservationId,
+                USER_ID
+            );
+    }
+
+    @Test
+    void 인증된_사용자에게_속하지_않은_예약_상세는_조회할_수_없다() {
+
+        // given
+        Long reservationId =
+            1000L;
+
+        given(
+            reservationRepository
+                .findByIdAndUser_Id(
+                    reservationId,
+                    USER_ID
+                )
+        ).willReturn(
+            Optional.empty()
+        );
+
+
+        // when + then
+        assertThatThrownBy(
+            () ->
+                reservationService
+                    .getReservation(
+                        USER_ID,
+                        reservationId
+                    )
+        )
+            .isInstanceOf(
+                ReservationNotFoundException.class
+            );
+
+        then(
+            reservationRepository
+        )
+            .should()
+            .findByIdAndUser_Id(
+                reservationId,
+                USER_ID
+            );
     }
 }

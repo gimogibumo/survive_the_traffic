@@ -6,6 +6,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -15,6 +16,7 @@ import com.survive_the_traffic.common.config.SecurityConfig;
 import com.survive_the_traffic.payment.domain.PaymentStatus;
 import com.survive_the_traffic.payment.dto.PaymentResponse;
 import com.survive_the_traffic.reservation.domain.ReservationStatus;
+import com.survive_the_traffic.reservation.dto.ReservationDetailResponse;
 import com.survive_the_traffic.reservation.dto.ReservationRequest;
 import com.survive_the_traffic.reservation.dto.ReservationResponse;
 import com.survive_the_traffic.reservation.service.ReservationFacade;
@@ -426,5 +428,119 @@ class ReservationControllerTest {
         return AuthenticatedUser.from(
             user
         );
+    }
+
+    @Test
+    void 예약_상세_조회는_인증된_사용자_id를_사용한다()
+        throws Exception {
+
+        // given
+        Long reservationId =
+            1000L;
+
+        LocalDateTime expiresAt =
+            LocalDateTime.of(
+                2026,
+                10,
+                20,
+                14,
+                30
+            );
+
+        ReservationDetailResponse response =
+            new ReservationDetailResponse(
+                reservationId,
+                "Survive the Traffic Live",
+                "A",
+                3,
+                12,
+                150000L,
+                ReservationStatus.PENDING,
+                expiresAt
+            );
+
+        given(
+            reservationService
+                .getReservation(
+                    USER_ID,
+                    reservationId
+                )
+        ).willReturn(
+            response
+        );
+
+
+        // when + then
+        mockMvc.perform(
+                get(
+                    "/api/reservations/{reservationId}",
+                    reservationId
+                )
+                    .with(
+                        user(
+                            authenticatedUser()
+                        )
+                    )
+            )
+            .andExpect(
+                status().isOk()
+            )
+            .andExpect(
+                jsonPath("$.reservationId")
+                    .value(reservationId)
+            )
+            .andExpect(
+                jsonPath("$.concertTitle")
+                    .value(
+                        "Survive the Traffic Live"
+                    )
+            )
+            .andExpect(
+                jsonPath("$.section")
+                    .value("A")
+            )
+            .andExpect(
+                jsonPath("$.row")
+                    .value(3)
+            )
+            .andExpect(
+                jsonPath("$.seatNumber")
+                    .value(12)
+            )
+            .andExpect(
+                jsonPath("$.price")
+                    .value(150000L)
+            )
+            .andExpect(
+                jsonPath("$.status")
+                    .value("PENDING")
+            );
+
+        then(
+            reservationService
+        )
+            .should()
+            .getReservation(
+                USER_ID,
+                reservationId
+            );
+    }
+
+    @Test
+    void 인증되지_않은_사용자는_예약_상세를_조회할_수_없다()
+        throws Exception {
+
+        Long reservationId =
+            1000L;
+
+        mockMvc.perform(
+                get(
+                    "/api/reservations/{reservationId}",
+                    reservationId
+                )
+            )
+            .andExpect(
+                status().isUnauthorized()
+            );
     }
 }
