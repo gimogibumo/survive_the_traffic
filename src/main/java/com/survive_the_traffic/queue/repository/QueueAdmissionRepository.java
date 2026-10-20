@@ -1,7 +1,7 @@
 package com.survive_the_traffic.queue.repository;
 
 import java.time.Duration;
-import java.time.Instant;
+import java.time.Clock;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -26,34 +26,20 @@ public class QueueAdmissionRepository {
 
     private final RedisScript<List> admitUsersScript;
 
+    private final Clock clock;
 
-    public List<Long> admit(
-        Long concertId,
-        long count
-    ) {
+
+    public List<Long> admit(Long concertId, long count) {
 
         if (count <= 0) {
-
-            throw new IllegalArgumentException(
-                "count must be greater than 0"
-            );
+            throw new IllegalArgumentException("count must be greater than 0");
         }
 
-
         /*
-         * 동일한 기준 시각으로
-         *
-         * now
-         * expiresAt
-         *
-         * 을 계산한다.
-         *
-         * Lua script에서는 now 이하의 기존 admission을
-         * expired member로 판단한다.
+         * 동일한 기준 시각으로 now, expiresAt을 계산한다.
+         * Lua script에서는 now 이하의 기존 admission을 expired member로 판단한다.
          */
-        long now =
-            Instant.now()
-                .toEpochMilli();
+        long now = clock.millis();
 
 
         long expiresAt =
@@ -64,60 +50,22 @@ public class QueueAdmissionRepository {
         List<?> result =
             redisTemplate.execute(
                 admitUsersScript,
-                List.of(
-                    waitingKey(
-                        concertId
-                    ),
-                    admittedKey(
-                        concertId
-                    )
-                ),
-                Long.toString(
-                    count
-                ),
-                Long.toString(
-                    expiresAt
-                ),
-                Long.toString(
-                    now
-                )
+                List.of(waitingKey(concertId), admittedKey(concertId)),
+                Long.toString(count),
+                Long.toString(expiresAt),
+                Long.toString(now)
             );
 
 
-        if (
-            result == null
-                || result.isEmpty()
-        ) {
+        if (result == null || result.isEmpty()) {return List.of();}
 
-            return List.of();
-        }
-
-
-        return result.stream()
-            .map(
-                Object::toString
-            )
-            .map(
-                Long::valueOf
-            )
-            .toList();
+        return result.stream().map(Object::toString).map(Long::valueOf).toList();
     }
 
 
-    private String waitingKey(
-        Long concertId
-    ) {
-
-        return WAITING_KEY_PREFIX
-            + concertId;
-    }
+    private String waitingKey(Long concertId) {return WAITING_KEY_PREFIX + concertId;}
 
 
-    private String admittedKey(
-        Long concertId
-    ) {
+    private String admittedKey(Long concertId) {return ADMITTED_KEY_PREFIX + concertId;}
 
-        return ADMITTED_KEY_PREFIX
-            + concertId;
-    }
 }

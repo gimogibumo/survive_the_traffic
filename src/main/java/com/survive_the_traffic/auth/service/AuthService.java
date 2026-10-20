@@ -5,6 +5,7 @@ import com.survive_the_traffic.auth.dto.SignupResponse;
 import com.survive_the_traffic.auth.exception.DuplicateEmailException;
 import com.survive_the_traffic.user.domain.User;
 import com.survive_the_traffic.user.repository.UserRepository;
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.Locale;
 import lombok.RequiredArgsConstructor;
@@ -20,31 +21,23 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final Clock clock;
 
-    public SignupResponse signup(
-        SignupRequest request
-    ) {
+    public SignupResponse signup(SignupRequest request) {
 
         String normalizedEmail = request.email().trim().toLowerCase(Locale.ROOT);
-        if (
-            userRepository.existsByEmail(
-                normalizedEmail
-            )
-        ) {
+        if (userRepository.existsByEmail(normalizedEmail)) {
             throw new DuplicateEmailException();
         }
 
-        String passwordHash =
-            passwordEncoder.encode(
-                request.password()
-            );
+        String passwordHash = passwordEncoder.encode(request.password());
 
         User user =
             User.builder()
                 .email(normalizedEmail)
                 .name(request.name())
                 .passwordHash(passwordHash)
-                .createdAt(LocalDateTime.now())
+                .createdAt(LocalDateTime.now(clock))
                 .build();
 
         try {

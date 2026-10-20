@@ -11,6 +11,7 @@ import com.survive_the_traffic.seat.domain.Seat;
 import com.survive_the_traffic.seat.domain.SeatStatus;
 import com.survive_the_traffic.user.domain.User;
 import jakarta.persistence.EntityManager;
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,10 +29,12 @@ public class PerformanceSeedService {
     private static final int BATCH_SIZE = 500;
 
     private final EntityManager entityManager;
+    private final Clock clock;
 
     @Transactional
     public SeatReadSeedResponse seedSeatReadData(int seatCount) {
-        Concert concert = persistConcert("Seat Read");
+        LocalDateTime now = LocalDateTime.now(clock);
+        Concert concert = persistConcert("Seat Read",now);
 
         for (int i = 0; i < seatCount; i++) {
             entityManager.persist(
@@ -48,22 +51,20 @@ public class PerformanceSeedService {
 
         entityManager.flush();
 
-        return new SeatReadSeedResponse(
-            concert.getId(),
-            seatCount
-        );
+        return new SeatReadSeedResponse(concert.getId(), seatCount);
     }
 
     @Transactional
     public ReservationScenarioSeedResponse seedHotSeatData(int userCount) {
-        Concert concert = persistConcert("Hot Seat");
+        LocalDateTime now = LocalDateTime.now(clock);
+        Concert concert = persistConcert("Hot Seat", now);
         Seat seat = buildSeat(concert, 1, 1, SeatStatus.AVAILABLE);
         entityManager.persist(seat);
 
         List<Long> userIds = new ArrayList<>();
 
         for (int i = 0; i < userCount; i++) {
-            User user = persistUser("hot-seat-user-" + i);
+            User user = persistUser("hot-seat-user-" + i, now);
             userIds.add(user.getId());
         }
 
@@ -78,12 +79,13 @@ public class PerformanceSeedService {
 
     @Transactional
     public ReservationScenarioSeedResponse seedDistributedSeatData(int count) {
-        Concert concert = persistConcert("Distributed Seats");
+        LocalDateTime now = LocalDateTime.now(clock);
+        Concert concert = persistConcert("Distributed Seats", now);
         List<Long> userIds = new ArrayList<>();
         List<Long> seatIds = new ArrayList<>();
 
         for (int i = 0; i < count; i++) {
-            User user = persistUser("distributed-user-" + i);
+            User user = persistUser("distributed-user-" + i, now);
             Seat seat = buildSeat(
                 concert,
                 rowNumberOf(i),
@@ -109,11 +111,11 @@ public class PerformanceSeedService {
     }
 
     @Transactional
-    public UserReservationSeedResponse seedUserReservationData(
-        int reservationCount
-    ) {
-        Concert concert = persistConcert("User Reservations");
-        User user = persistUser("reservation-history-user");
+    public UserReservationSeedResponse seedUserReservationData(int reservationCount) {
+
+        LocalDateTime now = LocalDateTime.now(clock);
+        Concert concert = persistConcert("User Reservations", now);
+        User user = persistUser("reservation-history-user", now);
 
         for (int i = 0; i < reservationCount; i++) {
             Seat seat = buildSeat(
@@ -128,8 +130,8 @@ public class PerformanceSeedService {
                     .user(user)
                     .seat(seat)
                     .status(ReservationStatus.CONFIRMED)
-                    .createdAt(LocalDateTime.now())
-                    .expiresAt(LocalDateTime.now().plusMinutes(5))
+                    .createdAt(now)
+                    .expiresAt(now.plusMinutes(5))
                     .build()
             );
 
@@ -145,10 +147,7 @@ public class PerformanceSeedService {
     }
 
     @Transactional(readOnly = true)
-    public ExplainResponse explainSeatsByConcert(
-        Long concertId,
-        boolean analyze
-    ) {
+    public ExplainResponse explainSeatsByConcert(Long concertId, boolean analyze) {
         String query =
             "SELECT * FROM seat WHERE concert_id = " + concertId;
         String explainSql = analyze
@@ -166,12 +165,12 @@ public class PerformanceSeedService {
         );
     }
 
-    private Concert persistConcert(String name) {
+    private Concert persistConcert(String name, LocalDateTime now) {
         Concert concert = Concert.builder()
             .title(name + " " + UUID.randomUUID())
-            .reservationOpenAt(LocalDateTime.now().minusDays(1))
-            .concertAt(LocalDateTime.now().plusDays(30))
-            .createdAt(LocalDateTime.now())
+            .reservationOpenAt(now.minusDays(1))
+            .concertAt(now.plusDays(30))
+            .createdAt(now)
             .build();
 
         entityManager.persist(concert);
@@ -179,11 +178,11 @@ public class PerformanceSeedService {
         return concert;
     }
 
-    private User persistUser(String name) {
+    private User persistUser(String name, LocalDateTime now) {
         User user = User.builder()
             .name(name)
             .email(name + "-" + UUID.randomUUID() + "@test.com")
-            .createdAt(LocalDateTime.now())
+            .createdAt(now)
             .build();
 
         entityManager.persist(user);

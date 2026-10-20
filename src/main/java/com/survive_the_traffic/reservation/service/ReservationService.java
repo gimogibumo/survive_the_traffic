@@ -18,6 +18,7 @@ import com.survive_the_traffic.seat.repository.SeatRepository;
 import com.survive_the_traffic.user.domain.User;
 import com.survive_the_traffic.user.exception.UserNotFoundException;
 import com.survive_the_traffic.user.repository.UserRepository;
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,7 @@ public class ReservationService {
     private final ReservationRepository reservationRepository;
     private final UserRepository userRepository;
     private final PaymentRepository paymentRepository;
+    private final Clock clock;
 
     @Transactional
     public ReservationResponse createReservation(Long userId, @Validated ReservationRequest request) {
@@ -47,7 +49,7 @@ public class ReservationService {
         seat.hold();
         seatRepository.save(seat);
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock);
         Reservation reservation = Reservation.builder()
             .seat(seat)
             .user(user)
@@ -71,15 +73,15 @@ public class ReservationService {
         Reservation reservation =
             reservationRepository.findByIdAndUser_Id(reservationId, userId)
                 .orElseThrow(ReservationNotFoundException::new);
-
-        reservation.validatePayable(LocalDateTime.now());
+        LocalDateTime now = LocalDateTime.now(clock);
+        reservation.validatePayable(now);
         //결제 했다 치고
         Payment payment = Payment.builder()
             .reservation(reservation)
             .amount(reservation.getSeat().getPrice())
             .status(com.survive_the_traffic.payment.domain.PaymentStatus.SUCCESS)
             .paymentKey(UUID.randomUUID().toString())
-            .createdAt(LocalDateTime.now())
+            .createdAt(now)
             .build();
         Payment savedPayment = paymentRepository.save(payment);
 

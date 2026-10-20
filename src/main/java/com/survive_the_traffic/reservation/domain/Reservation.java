@@ -56,7 +56,7 @@ public class Reservation {
             throw new ReservationNotPendingException();
         }
 
-        if (expiresAt.isBefore(now)) {
+        if (!now.isBefore(expiresAt)) {
             throw new ReservationExpiredException();
         }
     }

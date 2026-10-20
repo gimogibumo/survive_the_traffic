@@ -11,6 +11,10 @@ import com.survive_the_traffic.auth.dto.SignupResponse;
 import com.survive_the_traffic.auth.exception.DuplicateEmailException;
 import com.survive_the_traffic.user.domain.User;
 import com.survive_the_traffic.user.repository.UserRepository;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -29,14 +33,19 @@ class AuthServiceTest {
 
     private AuthService authService;
 
+    private Clock clock;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
 
+        clock = Clock.fixed(Instant.parse("2026-10-20T13:30:00Z"), ZoneId.of("Asia/Seoul"));
+
         authService =
             new AuthService(
                 userRepository,
-                passwordEncoder
+                passwordEncoder,
+                clock
             );
     }
 
@@ -118,7 +127,9 @@ class AuthServiceTest {
             );
 
         assertThat(savedUser.getCreatedAt())
-            .isNotNull();
+            .isEqualTo(LocalDateTime.of(
+                2026,10,20,22,30
+            ));
 
         assertThat(response.id())
             .isEqualTo(1L);

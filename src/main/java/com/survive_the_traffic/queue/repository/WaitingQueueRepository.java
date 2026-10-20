@@ -2,6 +2,7 @@ package com.survive_the_traffic.queue.repository;
 
 import com.survive_the_traffic.queue.dto.WaitingQueueJoinResult;
 import com.survive_the_traffic.queue.entity.WaitingQueueJoinStatus;
+import java.time.Clock;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -24,48 +25,32 @@ public class WaitingQueueRepository {
     private final StringRedisTemplate redisTemplate;
 
     private final DefaultRedisScript<List> joinWaitingQueueScript;
+    private final Clock clock;
 
 
     public WaitingQueueRepository(
-        StringRedisTemplate redisTemplate
+        StringRedisTemplate redisTemplate,
+        Clock clock
     ) {
-        this.redisTemplate =
-            redisTemplate;
+        this.redisTemplate = redisTemplate;
 
-        this.joinWaitingQueueScript =
-            new DefaultRedisScript<>();
+        this.joinWaitingQueueScript = new DefaultRedisScript<>();
 
-        this.joinWaitingQueueScript.setLocation(
-            new ClassPathResource(
-                "redis/join-waiting-queue.lua"
-            )
-        );
+        this.joinWaitingQueueScript.setLocation(new ClassPathResource("redis/join-waiting-queue.lua"));
 
-        this.joinWaitingQueueScript.setResultType(
-            List.class
-        );
+        this.joinWaitingQueueScript.setResultType(List.class);
+
+        this.clock = clock;
     }
 
 
-    public WaitingQueueJoinResult join(
-        Long concertId,
-        Long userId
-    ) {
+    public WaitingQueueJoinResult join(Long concertId, Long userId) {
 
-        String sequenceKey =
-            sequenceKey(
-                concertId
-            );
+        String sequenceKey = sequenceKey(concertId);
 
-        String waitingKey =
-            waitingKey(
-                concertId
-            );
+        String waitingKey = waitingKey(concertId);
 
-        String admittedKey =
-            admittedKey(
-                concertId
-            );
+        String admittedKey = admittedKey(concertId);
 
 
         List<?> result =
@@ -80,75 +65,44 @@ public class WaitingQueueRepository {
                 userId.toString(),
                 concertId.toString(),
                 Long.toString(
-                    System.currentTimeMillis()
+                    clock.millis()
                 )
             );
 
 
-        if (
-            result == null
-                || result.size() != 3
-        ) {
-
-            throw new IllegalStateException(
-                "Invalid waiting queue join result"
-            );
+        if (result == null || result.size() != 3) {
+            throw new IllegalStateException("Invalid waiting queue join result");
         }
 
 
-        long statusCode =
-            toLong(
-                result.get(0)
-            );
+        long statusCode = toLong(result.get(0));
 
-        long rank =
-            toLong(
-                result.get(1)
-            );
+        long rank = toLong(result.get(1));
 
-        long waitingCount =
-            toLong(
-                result.get(2)
-            );
+        long waitingCount = toLong(result.get(2));
 
 
         WaitingQueueJoinStatus status =
-            switch (
-                (int) statusCode
-                ) {
+            switch ((int) statusCode) {
 
-                case 0 ->
-                    WaitingQueueJoinStatus.JOINED;
+                case 0 -> WaitingQueueJoinStatus.JOINED;
 
-                case 1 ->
-                    WaitingQueueJoinStatus.ALREADY_WAITING;
+                case 1 -> WaitingQueueJoinStatus.ALREADY_WAITING;
 
-                case 2 ->
-                    WaitingQueueJoinStatus.ALREADY_ADMITTED;
+                case 2 -> WaitingQueueJoinStatus.ALREADY_ADMITTED;
 
                 default ->
-                    throw new IllegalStateException(
-                        "Unknown waiting queue join status code: "
-                            + statusCode
-                    );
+                    throw new IllegalStateException("Unknown waiting queue join status code: " + statusCode);
             };
 
 
-        return new WaitingQueueJoinResult(
-            status,
-            rank,
-            waitingCount
-        );
+        return new WaitingQueueJoinResult(status, rank, waitingCount);
     }
 
 
-    public Long getRank(
-        Long concertId,
-        Long userId
-    ) {
+    public Long getRank(Long concertId, Long userId) {
 
-        return redisTemplate
-            .opsForZSet()
+        return redisTemplate.opsForZSet()
             .rank(
                 waitingKey(
                     concertId

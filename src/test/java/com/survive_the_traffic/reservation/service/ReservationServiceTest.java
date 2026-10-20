@@ -73,16 +73,29 @@ class ReservationServiceTest {
     private ReservationService
         reservationService;
 
+    private Clock clock;
+
 
     @BeforeEach
     void setUp() {
+
+        clock =
+            Clock.fixed(
+                Instant.parse(
+                    "2026-10-20T13:30:00Z"
+                ),
+                ZoneId.of(
+                    "Asia/Seoul"
+                )
+            );
 
         reservationService =
             new ReservationService(
                 seatRepository,
                 reservationRepository,
                 userRepository,
-                paymentRepository
+                paymentRepository,
+                clock
             );
     }
 
@@ -113,6 +126,10 @@ class ReservationServiceTest {
             );
 
 
+        /*
+         * 인증된 userId를 이용해서
+         * 실제 예약 소유자를 조회한다.
+         */
         given(
             userRepository
                 .findById(
@@ -126,9 +143,8 @@ class ReservationServiceTest {
 
 
         /*
-         * 네 SeatRepository에서 pessimistic lock 조회 메서드가
-         * findById가 아니라 별도 메서드라면
-         * 여기 한 줄만 실제 메서드명으로 맞춰라.
+         * 좌석 예약 시 동시성 제어를 위해
+         * 비관적 락을 사용해서 좌석을 조회한다.
          */
         given(
             seatRepository
@@ -142,6 +158,11 @@ class ReservationServiceTest {
         );
 
 
+        /*
+         * request.concertId와
+         * seat가 실제로 속한 concertId가 같은지
+         * ReservationService에서 검증한다.
+         */
         given(
             seat.getConcert()
         ).willReturn(
@@ -156,7 +177,10 @@ class ReservationServiceTest {
 
 
         /*
-         * save 결과로 반환될 Reservation.
+         * Repository 저장 이후 반환될 Reservation을 mock한다.
+         *
+         * 실제 생성되는 Reservation과
+         * DB save 이후 반환값은 테스트에서 별도로 구분한다.
          */
         Reservation savedReservation =
             mock(
@@ -176,6 +200,9 @@ class ReservationServiceTest {
         );
 
 
+        /*
+         * ReservationResponse 생성에 사용되는 값들.
+         */
         given(
             savedReservation.getId()
         ).willReturn(
@@ -200,9 +227,9 @@ class ReservationServiceTest {
             LocalDateTime.of(
                 2026,
                 10,
-                19,
-                15,
-                5
+                20,
+                22,
+                35
             )
         );
 
@@ -223,6 +250,13 @@ class ReservationServiceTest {
 
 
         // then
+
+        /*
+         * 1.
+         * client가 전달한 userId가 아니라
+         * ReservationService에 전달된 인증 userId로
+         * User를 조회했는지 확인한다.
+         */
         then(
             userRepository
         )
@@ -232,6 +266,10 @@ class ReservationServiceTest {
             );
 
 
+        /*
+         * 2.
+         * 예약할 좌석을 비관적 락으로 조회했는지 확인한다.
+         */
         then(
             seatRepository
         )
@@ -241,6 +279,11 @@ class ReservationServiceTest {
             );
 
 
+        /*
+         * 3.
+         * AVAILABLE 좌석을 HELD 상태로 전환하는
+         * 도메인 메서드를 호출했는지 확인한다.
+         */
         then(
             seat
         )
@@ -248,6 +291,24 @@ class ReservationServiceTest {
             .hold();
 
 
+        /*
+         * 4.
+         * 변경된 Seat를 저장했는지 확인한다.
+         */
+        then(
+            seatRepository
+        )
+            .should()
+            .save(
+                seat
+            );
+
+
+        /*
+         * 5.
+         * 실제 ReservationService가 생성해서
+         * Repository에 넘긴 Reservation 객체를 잡는다.
+         */
         ArgumentCaptor<Reservation>
             reservationCaptor =
             ArgumentCaptor.forClass(
@@ -264,14 +325,138 @@ class ReservationServiceTest {
             );
 
 
+        Reservation capturedReservation =
+            reservationCaptor.getValue();
+
+
         assertThat(
-            reservationCaptor.getValue()
+            capturedReservation
         ).isNotNull();
 
 
+        /*
+         * 테스트에 주입한 Clock:
+         *
+         * Instant:
+         * 2026-10-20T13:30:00Z
+         *
+         * Zone:
+         * Asia/Seoul
+         *
+         * 따라서 LocalDateTime.now(clock)은
+         * 2026-10-20T22:30:00 이어야 한다.
+         */
+        LocalDateTime expectedCreatedAt =
+            LocalDateTime.of(
+                2026,
+                10,
+                20,
+                22,
+                30
+            );
+
+        /*
+         * Reservation hold TTL은 5분이므로
+         * expiresAt은 정확히 22:35이어야 한다.
+         */
+        LocalDateTime expectedExpiresAt =
+            LocalDateTime.of(
+                2026,
+                10,
+                20,
+                22,
+                35
+            );
+
+
+        /*
+         * 6.
+         * 생성된 Reservation의 소유자가
+         * 인증된 user인지 확인한다.
+         */
+        assertThat(
+            capturedReservation.getUser()
+        ).isSameAs(
+            user
+        );
+
+
+        /*
+         * 7.
+         * 예약 대상 좌석이 맞는지 확인한다.
+         */
+        assertThat(
+            capturedReservation.getSeat()
+        ).isSameAs(
+            seat
+        );
+
+
+        /*
+         * 8.
+         * 최초 예약 상태는 PENDING이어야 한다.
+         */
+        assertThat(
+            capturedReservation.getStatus()
+        ).isEqualTo(
+            ReservationStatus.PENDING
+        );
+
+
+        /*
+         * 9.
+         * 시스템 기본 시간을 직접 사용하지 않고
+         * 주입된 Clock을 기준으로 createdAt을 생성했는지 확인한다.
+         */
+        assertThat(
+            capturedReservation.getCreatedAt()
+        ).isEqualTo(
+            expectedCreatedAt
+        );
+
+
+        /*
+         * 10.
+         * expiresAt이 createdAt 기준 정확히 5분 뒤인지 확인한다.
+         */
+        assertThat(
+            capturedReservation.getExpiresAt()
+        ).isEqualTo(
+            expectedExpiresAt
+        );
+
+
+        /*
+         * 11.
+         * 최종 응답도 정상 생성되었는지 확인한다.
+         */
         assertThat(
             response
         ).isNotNull();
+
+        assertThat(
+            response.reservationId()
+        ).isEqualTo(
+            1L
+        );
+
+        assertThat(
+            response.seatId()
+        ).isEqualTo(
+            SEAT_ID
+        );
+
+        assertThat(
+            response.status()
+        ).isEqualTo(
+            ReservationStatus.PENDING
+        );
+
+        assertThat(
+            response.expiresAt()
+        ).isEqualTo(
+            expectedExpiresAt
+        );
     }
 
 

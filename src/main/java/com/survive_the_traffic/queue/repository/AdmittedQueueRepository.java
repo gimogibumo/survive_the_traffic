@@ -1,5 +1,6 @@
 package com.survive_the_traffic.queue.repository;
 
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -19,31 +20,30 @@ public class AdmittedQueueRepository {
 
     private final QueueAdmissionRepository queueAdmissionRepository;
 
+    private final Clock clock;
+
     private String admittedKey(Long concertId) {
         return ADMITTED_KEY_PREFIX + concertId;
     }
 
     public void add(Long concertId, List<Long> userIds) {
-        long expiresAt = Instant.now().plus(ADMISSION_TTL).toEpochMilli();
+        long now = clock.millis();
+        long expiresAt = now + ADMISSION_TTL.toMillis();
         String key = admittedKey(concertId);
         for(Long userId : userIds) {
-            redisTemplate.opsForZSet()
-                .add(key,userId.toString(),expiresAt);
+            redisTemplate.opsForZSet().add(key,userId.toString(),expiresAt);
         }
     }
 
     public boolean isAdmitted(Long concertId, Long userId) {
         Double expiresAt = redisTemplate.opsForZSet()
-            .score(
-                admittedKey(concertId),
-                userId.toString()
-            );
+            .score(admittedKey(concertId), userId.toString());
 
-        if(expiresAt == null) {
-            return false;
-        }
+        if(expiresAt == null) {return false;}
 
-        return expiresAt > System.currentTimeMillis();
+        long now = clock.millis();
+
+        return expiresAt > now;
     }
 
     public Long getSize(Long concertId) {
