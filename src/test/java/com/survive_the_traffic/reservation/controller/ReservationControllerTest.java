@@ -13,6 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.survive_the_traffic.auth.security.AuthenticatedUser;
 import com.survive_the_traffic.common.config.SecurityConfig;
+import com.survive_the_traffic.common.exception.AdmissionRequiredException;
 import com.survive_the_traffic.payment.domain.PaymentStatus;
 import com.survive_the_traffic.payment.dto.PaymentResponse;
 import com.survive_the_traffic.reservation.domain.ReservationStatus;
@@ -541,6 +542,70 @@ class ReservationControllerTest {
             )
             .andExpect(
                 status().isUnauthorized()
+            );
+    }
+
+    @Test
+    void admission이_없으면_예약요청은_403과_ADMISSION_REQUIRED를_반환한다()
+        throws Exception {
+
+        // given
+        ReservationRequest request =
+            new ReservationRequest(
+                CONCERT_ID,
+                SEAT_ID
+            );
+
+        given(
+            reservationFacade
+                .createReservation(
+                    USER_ID,
+                    request
+                )
+        ).willThrow(
+            new AdmissionRequiredException()
+        );
+
+
+        // when + then
+        mockMvc.perform(
+                post(
+                    "/api/reservations"
+                )
+                    .with(
+                        user(
+                            authenticatedUser()
+                        )
+                    )
+                    .with(
+                        csrf()
+                    )
+                    .contentType(
+                        MediaType.APPLICATION_JSON
+                    )
+                    .content(
+                        """
+                        {
+                          "concertId": 1,
+                          "seatId": 100
+                        }
+                        """
+                    )
+            )
+            .andExpect(
+                status().isForbidden()
+            )
+            .andExpect(
+                jsonPath("$.code")
+                    .value(
+                        "ADMISSION_REQUIRED"
+                    )
+            )
+            .andExpect(
+                jsonPath("$.message")
+                    .value(
+                        "예매 입장이 필요합니다."
+                    )
             );
     }
 }
