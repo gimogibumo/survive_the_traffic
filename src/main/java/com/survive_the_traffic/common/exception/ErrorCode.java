@@ -6,6 +6,12 @@ import org.springframework.http.HttpStatus;
 @Getter
 public enum ErrorCode {
 
+    ADMISSION_REQUIRED(
+        HttpStatus.FORBIDDEN,
+        "ADMISSION_REQUIRED",
+        "예매 입장이 필요합니다."
+    ),
+
     INVALID_CREDENTIALS(
         HttpStatus.UNAUTHORIZED,
         "INVALID_CREDENTIALS",

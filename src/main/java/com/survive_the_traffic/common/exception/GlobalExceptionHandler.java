@@ -41,22 +41,6 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(
-        AdmissionRequiredException.class
-    )
-    public ResponseEntity<ErrorResponse> handleAdmissionRequired(
-        AdmissionRequiredException e
-    ) {
-        return ResponseEntity
-            .status(HttpStatus.TOO_MANY_REQUESTS)
-            .body(
-                new ErrorResponse(
-                    "ADMISSION_REQUIRED",
-                    e.getMessage()
-                )
-            );
-    }
-
-    @ExceptionHandler(
         SeatConcertMismatchException.class
     )
     public ResponseEntity<ErrorResponse> handleSeatConcertMismatch(

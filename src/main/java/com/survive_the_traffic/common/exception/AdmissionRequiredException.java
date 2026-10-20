@@ -1,9 +1,9 @@
 package com.survive_the_traffic.common.exception;
 
-public class AdmissionRequiredException extends RuntimeException{
+public class AdmissionRequiredException extends BusinessException{
 
     public AdmissionRequiredException() {
-        super("Reservation admission is required");
+        super(ErrorCode.ADMISSION_REQUIRED);
     }
 
 }
