@@ -1,6 +1,7 @@
 package com.survive_the_traffic.common.config;
 
 import java.util.List;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,6 +21,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @EnableConfigurationProperties(CorsProperties.class)
+@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 public class SecurityConfig {
 
     @Bean
@@ -36,6 +38,7 @@ public class SecurityConfig {
                 authorize -> authorize
                     .requestMatchers(
                     "/api/auth/signup", "/api/auth/login", "/api/csrf").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/performance/hikari-probe", "/actuator/health/liveness","/actuator/health/readiness", "/api/performance/shutdown-probe").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/concerts/**").permitAll()
                     .anyRequest().authenticated()
             )

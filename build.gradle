@@ -39,6 +39,7 @@ dependencies {
 
     //redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework.boot:spring-boot-starter-session-data-redis'
 
     //security
     implementation 'org.springframework.boot:spring-boot-starter-security'

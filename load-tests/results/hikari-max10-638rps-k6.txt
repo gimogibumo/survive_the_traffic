@@ -1,0 +1,85 @@
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: ./load-tests/k6/phase7-hikari-baseline.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 300 max VUs, 15s max duration (incl. graceful stop):
+              * hikari_baseline: 638.00 iterations/s for 10s (maxVUs: 100-300, gracefulStop: 5s)
+
+
+running (01.0s), 009/100 VUs, 623 complete and 0 interrupted iterations
+hikari_baseline   [  10% ] 009/100 VUs  01.0s/10s  638.00 iters/s
+
+running (02.0s), 008/100 VUs, 1259 complete and 0 interrupted iterations
+hikari_baseline   [  20% ] 008/100 VUs  02.0s/10s  638.00 iters/s
+
+running (03.0s), 009/100 VUs, 1898 complete and 0 interrupted iterations
+hikari_baseline   [  30% ] 009/100 VUs  03.0s/10s  638.00 iters/s
+
+running (04.0s), 011/100 VUs, 2534 complete and 0 interrupted iterations
+hikari_baseline   [  40% ] 011/100 VUs  04.0s/10s  638.00 iters/s
+
+running (05.0s), 010/100 VUs, 3173 complete and 0 interrupted iterations
+hikari_baseline   [  50% ] 010/100 VUs  05.0s/10s  638.00 iters/s
+
+running (06.0s), 011/100 VUs, 3810 complete and 0 interrupted iterations
+hikari_baseline   [  60% ] 011/100 VUs  06.0s/10s  638.00 iters/s
+
+running (07.0s), 008/100 VUs, 4451 complete and 0 interrupted iterations
+hikari_baseline   [  70% ] 008/100 VUs  07.0s/10s  638.00 iters/s
+
+running (08.0s), 008/100 VUs, 5089 complete and 0 interrupted iterations
+hikari_baseline   [  80% ] 008/100 VUs  08.0s/10s  638.00 iters/s
+
+running (09.0s), 008/100 VUs, 5727 complete and 0 interrupted iterations
+hikari_baseline   [  90% ] 008/100 VUs  09.0s/10s  638.00 iters/s
+
+running (10.0s), 008/100 VUs, 6365 complete and 0 interrupted iterations
+hikari_baseline   [ 100% ] 008/100 VUs  10.0s/10s  638.00 iters/s
+
+
+  █ THRESHOLDS 
+
+    checks
+    ✓ 'rate>0.99' rate=100.00%
+
+    http_req_failed
+    ✓ 'rate<0.01' rate=0.00%
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 6381    637.110822/s
+    checks_succeeded...: 100.00% 6381 out of 6381
+    checks_failed......: 0.00%   0 out of 6381
+
+    ✓ hikari probe returned 200
+
+    HTTP
+    http_req_duration..............: avg=19.55ms min=10.85ms med=13.14ms p(90)=35.89ms p(95)=52.14ms p(99)=92ms    max=262.42ms
+      { expected_response:true }...: avg=19.55ms min=10.85ms med=13.14ms p(90)=35.89ms p(95)=52.14ms p(99)=92ms    max=262.42ms
+    http_req_failed................: 0.00%  0 out of 6381
+    http_reqs......................: 6381   637.110822/s
+
+    EXECUTION
+    iteration_duration.............: avg=19.65ms min=10.89ms med=13.23ms p(90)=35.97ms p(95)=52.22ms p(99)=92.11ms max=262.59ms
+    iterations.....................: 6381   637.110822/s
+    vus............................: 8      min=8         max=11 
+    vus_max........................: 100    min=100       max=100
+
+    NETWORK
+    data_received..................: 2.8 MB 277 kB/s
+    data_sent......................: 625 kB 62 kB/s
+
+
+
+
+running (10.0s), 000/100 VUs, 6381 complete and 0 interrupted iterations
+hikari_baseline ✓ [ 100% ] 000/100 VUs  10s  638.00 iters/s

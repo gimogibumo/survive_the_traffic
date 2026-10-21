@@ -71,4 +71,14 @@ public class PerformanceController {
             analyze
         );
     }
+
+    @GetMapping("/hikari-probe")
+    public int hikariProbe() {
+        return performanceQueryService.hikariProbe();
+    }
+
+    @GetMapping("/shutdown-probe")
+    public String gracefulShutdownProbe(@RequestParam(defaultValue = "5000") long delayMs) {
+        return performanceQueryService.gracefulShutDownProbe(delayMs);
+    }
 }
