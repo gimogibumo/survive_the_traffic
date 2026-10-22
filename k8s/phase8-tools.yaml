@@ -1,0 +1,41 @@
+# Temporary experiment clients only. No DB/cache server is created.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ticketing-phase8-tools
+  namespace: ticketing
+  labels:
+    app: ticketing-phase8-tools
+spec:
+  restartPolicy: Never
+  containers:
+    - name: db
+      image: postgres:17
+      command: [sleep, '86400']
+      resources:
+        requests: {cpu: 5m, memory: 32Mi}
+        limits: {memory: 128Mi}
+      env:
+        - name: PGHOST
+          valueFrom: {configMapKeyRef: {name: ticketing-config, key: DB_HOST}}
+        - name: PGPORT
+          valueFrom: {configMapKeyRef: {name: ticketing-config, key: DB_PORT}}
+        - name: PGDATABASE
+          valueFrom: {configMapKeyRef: {name: ticketing-config, key: DB_NAME}}
+        - name: PGUSER
+          valueFrom: {secretKeyRef: {name: ticketing-secret, key: DB_USERNAME}}
+        - name: PGPASSWORD
+          valueFrom: {secretKeyRef: {name: ticketing-secret, key: DB_PASSWORD}}
+    - name: valkey
+      image: redis:7
+      command: [sleep, '86400']
+      resources:
+        requests: {cpu: 5m, memory: 16Mi}
+        limits: {memory: 64Mi}
+      env:
+        - name: REDIS_HOST
+          valueFrom: {configMapKeyRef: {name: ticketing-config, key: REDIS_HOST}}
+        - name: REDIS_PORT
+          value: '6379'
+        - name: REDISCLI_AUTH
+          valueFrom: {secretKeyRef: {name: ticketing-valkey-secret, key: REDIS_PASSWORD}}

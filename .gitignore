@@ -47,3 +47,6 @@ out/
 __pycache__/
 *.pem
 *.key
+
+# Phase 8 measurements are intentional experiment artifacts.
+!results/phase8/**/*.csv
