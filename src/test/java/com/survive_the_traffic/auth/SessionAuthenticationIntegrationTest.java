@@ -25,7 +25,12 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-@SpringBootTest
+// MockHttpSession으로 서블릿 인증 흐름을 검증한다.
+// Redis 쿠키 세션은 RedisSessionIntegrationTest에서 실제 HTTP로 검증한다.
+@SpringBootTest(properties = {
+    "spring.autoconfigure.exclude="
+        + "org.springframework.boot.session.data.redis.autoconfigure.SessionDataRedisAutoConfiguration"
+})
 @AutoConfigureMockMvc
 class SessionAuthenticationIntegrationTest {
 
