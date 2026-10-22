@@ -38,6 +38,26 @@ flowchart TD
 실제 DB/Valkey endpoint 및 비밀번호는 이 저장소에 기록하지 않는다.
 배포 overlay는 ConfigMap/Secret/Namespace/DB/캐시를 생성하거나 덮어쓰지 않는다.
 
+## 프론트엔드 CORS Origin 적용
+
+운영 허용 Origin은 `FRONTEND_ORIGIN` 환경변수로 지정한다.
+현재 프론트엔드는 `https://d2eomise0zoyt8.cloudfront.net`이며, scheme과 host를 정확히 지정하고
+경로나 마지막 `/`는 붙이지 않는다. 미지정 시 기본값은 `http://localhost:5173`이다.
+
+API는 기존 `ticketing-config`를 `envFrom`으로 읽는다. ConfigMap 값을 바꾼 뒤 API Pod를
+교체해야 실행 중인 프로세스에 반영된다. 기존 CI/CD는 이 ConfigMap을 덮어쓰지 않는다.
+
+```bash
+kubectl -n ticketing patch configmap ticketing-config --type=merge \
+  -p '{"data":{"FRONTEND_ORIGIN":"https://d2eomise0zoyt8.cloudfront.net"}}'
+kubectl -n ticketing rollout restart deployment/ticketing-api
+kubectl -n ticketing rollout status deployment/ticketing-api --timeout=300s
+```
+
+반영 후 기존 ALB의 `/api/csrf`에 위 `Origin` 헤더를 보내 HTTP 200,
+`Access-Control-Allow-Origin`의 동일 Origin 및 `Access-Control-Allow-Credentials: true`를 확인한다.
+브라우저의 쿠키 요청에는 `credentials: 'include'`를 사용한다.
+
 ## Kustomize 구조
 
 ```text
