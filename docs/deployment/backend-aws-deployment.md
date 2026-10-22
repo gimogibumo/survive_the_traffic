@@ -104,7 +104,9 @@ Queue smoke를 수동 실행할 때만 기존 테스트 계정의 `TEST_EMAIL`, 
 
 기존 EKS용 OIDC Provider는 GitHub용과 발급자가 다르므로 별도 GitHub Provider를 추가했다.
 배포 Role의 trust는 audience `sts.amazonaws.com`,
-subject `repo:gimogibumo/survive_the_traffic:ref:refs/heads/main`으로 제한한다.
+subject `repo:gimogibumo@149920842/survive_the_traffic@1362417695:ref:refs/heads/main`으로 제한한다.
+GitHub API의 OIDC 설정에서 `use_immutable_subject=true`와 위 owner/repository ID를 확인했다.
+이 저장소에는 이름만 포함한 과거 subject 형식을 사용하면 인증이 실패한다.
 PR/다른 branch는 Role을 assume할 수 없다. 이 workflow에 GitHub environment를 추가하면
 OIDC subject 형식이 달라지므로 trust 정책과 함께 검토해야 한다.
 
@@ -260,5 +262,6 @@ EKS 서버 dry-run도 검증했다. 실제 배포 성공 여부는 해당 SHA의
 이 문서는 운영 용량이나 SLA를 입증하지 않는다.
 
 설정 근거: [GitHub OIDC 공식 문서](https://docs.github.com/en/actions/how-tos/secure-your-work/security-harden-deployments/oidc-in-aws),
+[GitHub immutable subject 공식 문서](https://docs.github.com/en/actions/reference/security/oidc#immutable-subject-claims),
 [EKS access entry 공식 문서](https://docs.aws.amazon.com/eks/latest/userguide/creating-access-entries.html),
 [Spring Boot auto-configuration 공식 문서](https://docs.spring.io/spring-boot/reference/using/auto-configuration.html).
