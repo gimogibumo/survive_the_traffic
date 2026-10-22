@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ticketing-queue-worker
+  namespace: ticketing
+
+spec:
+  replicas: 1
+
+  strategy:
+    type: Recreate
+
+  selector:
+    matchLabels:
+      app: ticketing-queue-worker
+
+  template:
+    metadata:
+      labels:
+        app: ticketing-queue-worker
+
+    spec:
+      terminationGracePeriodSeconds: 30
+
+      containers:
+        - name: ticketing-queue-worker
+          image: survive-the-traffic:local
+          imagePullPolicy: IfNotPresent
+
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              memory: "512Mi"
+
+          env:
+            - name: APP_ROLE
+              value: worker
+
+            - name: QUEUE_ADMISSION_WORKER_ENABLED
+              value: "true"
+
+            - name: REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: ticketing-config
+                  key: REDIS_HOST
+
+            - name: REDIS_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: ticketing-config
+                  key: REDIS_PORT
