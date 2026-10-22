@@ -1,0 +1,39 @@
+# One-time administrator setup; excluded from application overlays.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: ticketing-github-deployer
+  namespace: ticketing
+rules:
+  - apiGroups: [apps]
+    resources: [deployments]
+    resourceNames: [ticketing-api, ticketing-queue-worker]
+    verbs: [get, list, patch, watch]
+  - apiGroups: [""]
+    resources: [services]
+    resourceNames: [ticketing-api]
+    verbs: [get, patch]
+  - apiGroups: [networking.k8s.io]
+    resources: [ingresses]
+    resourceNames: [ticketing-api]
+    verbs: [get, patch]
+  - apiGroups: [batch]
+    resources: [jobs]
+    verbs: [create, get, list, watch]
+  - apiGroups: [""]
+    resources: [pods]
+    verbs: [get, list]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ticketing-github-deployer
+  namespace: ticketing
+subjects:
+  - kind: Group
+    name: ticketing:github-deployer
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: ticketing-github-deployer
+  apiGroup: rbac.authorization.k8s.io

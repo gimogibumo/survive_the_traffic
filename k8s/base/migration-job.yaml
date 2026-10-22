@@ -5,7 +5,9 @@ metadata:
   namespace: ticketing
 
 spec:
-  backoffLimit: 1
+  backoffLimit: 0
+  activeDeadlineSeconds: 300
+  ttlSecondsAfterFinished: 86400
 
   template:
     metadata:
@@ -17,12 +19,15 @@ spec:
 
       containers:
         - name: migration
-          image: 248189924429.dkr.ecr.ap-northeast-2.amazonaws.com/survive-the-traffic:phase7-20261022-115720
+          image: survive-the-traffic:local
           imagePullPolicy: IfNotPresent
 
           env:
             - name: APP_ROLE
               value: migration
+
+            - name: SPRING_FLYWAY_ENABLED
+              value: "true"
 
             - name: DB_HOST
               valueFrom:

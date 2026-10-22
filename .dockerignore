@@ -17,3 +17,16 @@ docs
 
 compose.yaml
 Dockerfile*
+
+.env
+.env.*
+.aws
+.kube
+.codex
+.agents
+.github
+k8s
+scripts
+*.pem
+*.key
+CODEX_BACKEND_AWS_CICD.md

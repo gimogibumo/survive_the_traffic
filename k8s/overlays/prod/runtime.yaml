@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ticketing-api
+  namespace: ticketing
+spec:
+  template:
+    spec:
+      containers:
+        - name: ticketing-api
+          envFrom:
+            - configMapRef:
+                name: ticketing-config
+            - secretRef:
+                name: ticketing-secret
+            - secretRef:
+                name: ticketing-valkey-secret
+          env:
+            - name: REDIS_PORT
+              value: "6379"
+            - name: REDIS_SSL_ENABLED
+              value: "true"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ticketing-queue-worker
+  namespace: ticketing
+spec:
+  template:
+    spec:
+      containers:
+        - name: ticketing-queue-worker
+          envFrom:
+            - configMapRef:
+                name: ticketing-config
+            - secretRef:
+                name: ticketing-secret
+            - secretRef:
+                name: ticketing-valkey-secret
+          env:
+            - name: REDIS_PORT
+              value: "6379"
+            - name: REDIS_SSL_ENABLED
+              value: "true"

@@ -1,0 +1,86 @@
+name: Backend Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-production
+  cancel-in-progress: false
+
+jobs:
+  # A main push runs the same CI as a PR, once, before obtaining AWS credentials.
+  ci:
+    uses: ./.github/workflows/backend-ci.yml
+
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: ci
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      AWS_ROLE_ARN: ${{ vars.AWS_ROLE_ARN }}
+      EKS_CLUSTER_NAME: ${{ vars.EKS_CLUSTER_NAME }}
+      ECR_REPOSITORY_URI: ${{ vars.ECR_REPOSITORY_URI }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Validate deployment variables
+        run: |
+          : "${AWS_REGION:?Set repository variable AWS_REGION}"
+          : "${AWS_ROLE_ARN:?Set repository variable AWS_ROLE_ARN}"
+          : "${EKS_CLUSTER_NAME:?Set repository variable EKS_CLUSTER_NAME}"
+          : "${ECR_REPOSITORY_URI:?Set repository variable ECR_REPOSITORY_URI}"
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: github-${{ github.run_id }}
+      - uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd # v2.1.7
+      - name: Check immutable SHA image
+        id: image
+        run: |
+          aws ecr describe-images --repository-name survive-the-traffic \
+            --filter tagStatus=TAGGED --query 'imageDetails[].imageTags[]' \
+            --output json > "$RUNNER_TEMP/ecr-tags.json"
+          python3 - <<'PY'
+          import json, os, pathlib
+          tags = json.loads((pathlib.Path(os.environ['RUNNER_TEMP']) / 'ecr-tags.json').read_text())
+          exists = os.environ['GITHUB_SHA'] in tags
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write(f'exists={str(exists).lower()}\n')
+          PY
+      - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
+        if: steps.image.outputs.exists != 'true'
+        with:
+          platforms: arm64
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+        if: steps.image.outputs.exists != 'true'
+      - name: Build and push ARM64 image
+        if: steps.image.outputs.exists != 'true'
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          platforms: linux/arm64
+          push: true
+          tags: ${{ env.ECR_REPOSITORY_URI }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Configure EKS client
+        run: |
+          bash scripts/deployment/install-kubectl.sh "$RUNNER_TEMP/bin"
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+          export KUBECONFIG="$RUNNER_TEMP/kubeconfig"
+          echo "KUBECONFIG=$KUBECONFIG" >> "$GITHUB_ENV"
+          aws eks update-kubeconfig --name "$EKS_CLUSTER_NAME" --region "$AWS_REGION"
+      - name: Migrate, deploy and smoke test
+        run: |
+          bash scripts/deployment/deploy.sh deploy \
+            "$ECR_REPOSITORY_URI:$GITHUB_SHA" "$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"

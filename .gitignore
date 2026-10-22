@@ -37,3 +37,13 @@ out/
 .vscode/
 
 *.csv
+
+### Local credentials / deployment output ###
+.env
+.env.*
+!.env.example
+.aws/
+.kube/
+__pycache__/
+*.pem
+*.key

@@ -2,7 +2,8 @@
 # 1. Build stage
 # =========================================================
 
-FROM eclipse-temurin:21-jdk AS build
+# Java bytecode is portable; compile on the build host and target ARM64 at runtime.
+FROM --platform=$BUILDPLATFORM eclipse-temurin:21-jdk AS build
 
 WORKDIR /workspace
 
