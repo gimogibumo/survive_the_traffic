@@ -1,0 +1,36 @@
+1792667632.0888991
+NAME                                      CPU(cores)   MEMORY(bytes)   
+ticketing-api-5df9574774-mmfmd            574m         357Mi           
+ticketing-api-5df9574774-tvdkf            565m         355Mi           
+ticketing-phase8-tools                    0m           2Mi             
+ticketing-queue-worker-5f76b54788-jdx42   52m          202Mi           
+1792667635.183573
+NAME                                      CPU(cores)   MEMORY(bytes)   
+ticketing-api-5df9574774-mmfmd            574m         357Mi           
+ticketing-api-5df9574774-tvdkf            565m         355Mi           
+ticketing-phase8-tools                    0m           2Mi             
+ticketing-queue-worker-5f76b54788-jdx42   52m          202Mi           
+1792667637.598557
+NAME                                      CPU(cores)   MEMORY(bytes)   
+ticketing-api-5df9574774-mmfmd            135m         357Mi           
+ticketing-api-5df9574774-tvdkf            270m         360Mi           
+ticketing-phase8-tools                    5m           3Mi             
+ticketing-queue-worker-5f76b54788-jdx42   61m          205Mi           
+1792667640.1247208
+NAME                                      CPU(cores)   MEMORY(bytes)   
+ticketing-api-5df9574774-mmfmd            135m         357Mi           
+ticketing-api-5df9574774-tvdkf            270m         360Mi           
+ticketing-phase8-tools                    5m           3Mi             
+ticketing-queue-worker-5f76b54788-jdx42   61m          205Mi           
+1792667642.597826
+NAME                                      CPU(cores)   MEMORY(bytes)   
+ticketing-api-5df9574774-mmfmd            135m         357Mi           
+ticketing-api-5df9574774-tvdkf            270m         360Mi           
+ticketing-phase8-tools                    5m           3Mi             
+ticketing-queue-worker-5f76b54788-jdx42   61m          205Mi           
+1792667645.17837
+NAME                                      CPU(cores)   MEMORY(bytes)   
+ticketing-api-5df9574774-mmfmd            135m         357Mi           
+ticketing-api-5df9574774-tvdkf            270m         360Mi           
+ticketing-phase8-tools                    5m           3Mi             
+ticketing-queue-worker-5f76b54788-jdx42   61m          205Mi           

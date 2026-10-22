@@ -1,0 +1,17 @@
+1792656744.837832
+NAME                            CPU(cores)   MEMORY(bytes)   
+ticketing-api-559f8c4fb-kbr9q   155m         323Mi           
+ticketing-api-559f8c4fb-ww7mh   18m          305Mi           
+ticketing-phase8-tools          0m           2Mi             
+1792656747.588106
+NAME                                      CPU(cores)   MEMORY(bytes)   
+ticketing-api-559f8c4fb-kbr9q             77m          330Mi           
+ticketing-api-559f8c4fb-ww7mh             234m         332Mi           
+ticketing-phase8-tools                    3m           2Mi             
+ticketing-queue-worker-5f76b54788-s24vc   910m         197Mi           
+1792656750.0285382
+NAME                                      CPU(cores)   MEMORY(bytes)   
+ticketing-api-559f8c4fb-kbr9q             77m          330Mi           
+ticketing-api-559f8c4fb-ww7mh             234m         332Mi           
+ticketing-phase8-tools                    10m          2Mi             
+ticketing-queue-worker-5f76b54788-s24vc   936m         197Mi           

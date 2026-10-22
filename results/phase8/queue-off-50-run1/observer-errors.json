@@ -1,0 +1,14 @@
+[
+  {
+    "observer": "queue",
+    "error": "RuntimeError"
+  },
+  {
+    "observer": "pod",
+    "error": "RuntimeError"
+  },
+  {
+    "observer": "postgres",
+    "error": "RuntimeError"
+  }
+]

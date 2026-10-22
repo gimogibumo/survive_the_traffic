@@ -1,0 +1,30 @@
+- start: 1792667241.858552
+- burstAt: 1792667318.858
+- gitCommit: 6eae8a15a134abd05fcc72df7fa60bf393d15563
+- image: 248189924429.dkr.ecr.ap-northeast-2.amazonaws.com/survive-the-traffic:6eae8a15a134abd05fcc72df7fa60bf393d15563
+- apiReplicas: 2
+- workerReplicas: 1
+- concertId: 2
+- seatCount: 1000
+- users: 500
+- mode: OFF
+- repetition: 3
+- pollInterval: 1
+- admissionBatch: 50
+- workerIntervalMs: 100
+- admissionTtlSeconds: 300
+- rdsClass: db.t4g.micro
+- valkeyClass: cache.t4g.micro
+- warmupReservations: 20
+- loginBarrierSeconds: 77
+- protocolVersion: 2
+- authStartRatePerSecond: 8
+- fixtureSha256: 35df5c732dbe4c1efcd9f65ab3083b6a0bbafbca70d5290c36c97f136f7e82f5
+- k6ScriptSha256: 78775e47a0f3060f26a5f6915903de92d905a63c30d436e3190848b6b334578e
+- k6Machine: same local macOS host; 16 GiB memory
+- command: USERS=500 CONCERT_ID=2 k6 run load-tests/k6/queue-off-aws.js (other inputs via environment)
+- measurementStart: 1792667317.9559538
+- end: 1792667329.238496
+- k6ExitCode: 99
+- startUtc: 2026-10-22T11:07:21.858552+00:00
+- endUtc: 2026-10-22T11:08:49.238496+00:00

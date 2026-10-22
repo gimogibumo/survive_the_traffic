@@ -1,0 +1,1 @@
+500명 인증 준비를 동시에 시작한 run이다. 로그인 431/500 성공, 로그인 후 CSRF 등에서 준비가 실패해 예약은 26명만 수행했다. 두 API Pod에서 liveness/readiness timeout과 재시작을 확인했다. 목표한 500명 예약 burst를 만들지 못했으므로 최종 ON/OFF 비교에서 제외한다. 준비 단계의 인증을 8 users/s로 분산하는 protocol v2를 도입하고 50·100명부터 같은 정책으로 다시 측정한다. 애플리케이션 이미지·replica·JVM·DB·Queue batch·interval·probe 설정은 바꾸지 않는다.

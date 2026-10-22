@@ -1,0 +1,24 @@
+{
+  "primaryRuns": 12,
+  "tableGroups": 8,
+  "cohortUsers": 5300,
+  "successfulResponses": 5289,
+  "fixtureUsersSeats": 1000,
+  "fixedImageScriptFixture": true,
+  "allPreparedOnTime": true,
+  "hikariTimeouts": 0,
+  "runtimeRestored": true,
+  "documentSections": 18,
+  "documentLinksValid": true,
+  "secretScanFiles": 392,
+  "secretOrPrivateEndpointMatches": 0,
+  "k6OnOffInspect": true,
+  "pythonSyntax": true,
+  "javaTestReport": {
+    "tests": 129,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 1
+  },
+  "temporaryClientPodDeleted": true
+}

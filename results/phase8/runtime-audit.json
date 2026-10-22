@@ -1,0 +1,47 @@
+{
+  "timestampUtc": "2026-10-22T11:51:55.689004+00:00",
+  "deployments": [
+    {
+      "name": "ticketing-api",
+      "replicas": 2,
+      "ready": 2,
+      "image": "248189924429.dkr.ecr.ap-northeast-2.amazonaws.com/survive-the-traffic:6eae8a15a134abd05fcc72df7fa60bf393d15563",
+      "bypass": []
+    },
+    {
+      "name": "ticketing-queue-worker",
+      "replicas": 1,
+      "ready": 1,
+      "image": "248189924429.dkr.ecr.ap-northeast-2.amazonaws.com/survive-the-traffic:6eae8a15a134abd05fcc72df7fa60bf393d15563",
+      "bypass": []
+    }
+  ],
+  "pods": [
+    {
+      "name": "ticketing-api-648b457fc9-5grwb",
+      "ready": true,
+      "restartCount": 0
+    },
+    {
+      "name": "ticketing-api-648b457fc9-wgjrc",
+      "ready": true,
+      "restartCount": 0
+    },
+    {
+      "name": "ticketing-queue-worker-5f76b54788-s4zv2",
+      "ready": true,
+      "restartCount": 0
+    }
+  ],
+  "fixtureCounts": "1000|1000|0",
+  "queue": [
+    0,
+    0,
+    0
+  ],
+  "gateProbe": {
+    "httpStatus": 403,
+    "code": "ADMISSION_REQUIRED"
+  },
+  "kubectlTop": "NAME                                      CPU(cores)   MEMORY(bytes)   \nticketing-api-648b457fc9-5grwb            5m           313Mi           \nticketing-api-648b457fc9-wgjrc            87m          318Mi           \nticketing-phase8-tools                    0m           2Mi             \nticketing-queue-worker-5f76b54788-s4zv2   19m          205Mi           \n"
+}

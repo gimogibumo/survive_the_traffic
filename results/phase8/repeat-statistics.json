@@ -1,0 +1,422 @@
+[
+  {
+    "users": 50,
+    "mode": "OFF",
+    "runs": [
+      "queue-off-50-run3"
+    ],
+    "repetitions": 1,
+    "error_rate": 0.0,
+    "pending_max_all_runs": 21.0,
+    "pending_unresolved_runs": [],
+    "db_connections_max_all_runs": 16.0,
+    "reservation_p95_ms": {
+      "mean": 1232.71275,
+      "median": 1232.71275,
+      "min": 1232.71275,
+      "max": 1232.71275
+    },
+    "reservation_p99_ms": {
+      "mean": 1254.6685599999998,
+      "median": 1254.6685599999998,
+      "min": 1254.6685599999998,
+      "max": 1254.6685599999998
+    },
+    "hikari_pending_max_observed": {
+      "mean": 21.0,
+      "median": 21.0,
+      "min": 21.0,
+      "max": 21.0
+    },
+    "acquire_mean_ms": {
+      "mean": 444.58916189999997,
+      "median": 444.58916189999997,
+      "min": 444.58916189999997,
+      "max": 444.58916189999997
+    },
+    "queue_wait_p95_ms": null,
+    "end_to_end_p95_ms": {
+      "mean": 1232.8999999999999,
+      "median": 1232.8999999999999,
+      "min": 1232.8999999999999,
+      "max": 1232.8999999999999
+    },
+    "polls_per_user": {
+      "mean": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "max": 0.0
+    }
+  },
+  {
+    "users": 50,
+    "mode": "ON",
+    "runs": [
+      "queue-on-50-run3"
+    ],
+    "repetitions": 1,
+    "error_rate": 0.0,
+    "pending_max_all_runs": 8.0,
+    "pending_unresolved_runs": [],
+    "db_connections_max_all_runs": 15.0,
+    "reservation_p95_ms": {
+      "mean": 903.16945,
+      "median": 903.16945,
+      "min": 903.16945,
+      "max": 903.16945
+    },
+    "reservation_p99_ms": {
+      "mean": 982.86591,
+      "median": 982.86591,
+      "min": 982.86591,
+      "max": 982.86591
+    },
+    "hikari_pending_max_observed": {
+      "mean": 8.0,
+      "median": 8.0,
+      "min": 8.0,
+      "max": 8.0
+    },
+    "acquire_mean_ms": {
+      "mean": 139.41618308,
+      "median": 139.41618308,
+      "min": 139.41618308,
+      "max": 139.41618308
+    },
+    "queue_wait_p95_ms": {
+      "mean": 2283.65,
+      "median": 2283.65,
+      "min": 2283.65,
+      "max": 2283.65
+    },
+    "end_to_end_p95_ms": {
+      "mean": 2615.55,
+      "median": 2615.55,
+      "min": 2615.55,
+      "max": 2615.55
+    },
+    "polls_per_user": {
+      "mean": 1.26,
+      "median": 1.26,
+      "min": 1.26,
+      "max": 1.26
+    }
+  },
+  {
+    "users": 100,
+    "mode": "OFF",
+    "runs": [
+      "queue-off-100-run2"
+    ],
+    "repetitions": 1,
+    "error_rate": 0.0,
+    "pending_max_all_runs": 43.0,
+    "pending_unresolved_runs": [],
+    "db_connections_max_all_runs": 22.0,
+    "reservation_p95_ms": {
+      "mean": 1916.056,
+      "median": 1916.056,
+      "min": 1916.056,
+      "max": 1916.056
+    },
+    "reservation_p99_ms": {
+      "mean": 1980.167,
+      "median": 1980.167,
+      "min": 1980.167,
+      "max": 1980.167
+    },
+    "hikari_pending_max_observed": {
+      "mean": 43.0,
+      "median": 43.0,
+      "min": 43.0,
+      "max": 43.0
+    },
+    "acquire_mean_ms": {
+      "mean": 699.18131782,
+      "median": 699.18131782,
+      "min": 699.18131782,
+      "max": 699.18131782
+    },
+    "queue_wait_p95_ms": null,
+    "end_to_end_p95_ms": {
+      "mean": 1916.9499999999998,
+      "median": 1916.9499999999998,
+      "min": 1916.9499999999998,
+      "max": 1916.9499999999998
+    },
+    "polls_per_user": {
+      "mean": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "max": 0.0
+    }
+  },
+  {
+    "users": 100,
+    "mode": "ON",
+    "runs": [
+      "queue-on-100-run2"
+    ],
+    "repetitions": 1,
+    "error_rate": 0.0,
+    "pending_max_all_runs": 9.0,
+    "pending_unresolved_runs": [],
+    "db_connections_max_all_runs": 21.0,
+    "reservation_p95_ms": {
+      "mean": 1984.6628,
+      "median": 1984.6628,
+      "min": 1984.6628,
+      "max": 1984.6628
+    },
+    "reservation_p99_ms": {
+      "mean": 2030.57798,
+      "median": 2030.57798,
+      "min": 2030.57798,
+      "max": 2030.57798
+    },
+    "hikari_pending_max_observed": {
+      "mean": 9.0,
+      "median": 9.0,
+      "min": 9.0,
+      "max": 9.0
+    },
+    "acquire_mean_ms": {
+      "mean": 218.01851947,
+      "median": 218.01851947,
+      "min": 218.01851947,
+      "max": 218.01851947
+    },
+    "queue_wait_p95_ms": {
+      "mean": 3415.1,
+      "median": 3415.1,
+      "min": 3415.1,
+      "max": 3415.1
+    },
+    "end_to_end_p95_ms": {
+      "mean": 4177,
+      "median": 4177,
+      "min": 4177,
+      "max": 4177
+    },
+    "polls_per_user": {
+      "mean": 1.0,
+      "median": 1.0,
+      "min": 1.0,
+      "max": 1.0
+    }
+  },
+  {
+    "users": 500,
+    "mode": "OFF",
+    "runs": [
+      "queue-off-500-run3",
+      "queue-off-500-run4",
+      "queue-off-500-run5"
+    ],
+    "repetitions": 3,
+    "error_rate": 0.0020000000000000018,
+    "pending_max_all_runs": 185.0,
+    "pending_unresolved_runs": [
+      "queue-off-500-run5"
+    ],
+    "db_connections_max_all_runs": 23.0,
+    "reservation_p95_ms": {
+      "mean": 6280.222,
+      "median": 6246.34545,
+      "min": 5554.83555,
+      "max": 7039.485
+    },
+    "reservation_p99_ms": {
+      "mean": 6437.16495,
+      "median": 6381.57081,
+      "min": 5664.7856,
+      "max": 7265.13844
+    },
+    "hikari_pending_max_observed": {
+      "mean": 122.66666666666667,
+      "median": 183.0,
+      "min": 0.0,
+      "max": 185.0
+    },
+    "acquire_mean_ms": {
+      "mean": 2628.600683230461,
+      "median": 2653.9801367414834,
+      "min": 2486.487960116233,
+      "max": 2745.3339528336674
+    },
+    "queue_wait_p95_ms": null,
+    "end_to_end_p95_ms": {
+      "mean": 6378.833333333333,
+      "median": 6313.05,
+      "min": 5766.05,
+      "max": 7057.4
+    },
+    "polls_per_user": {
+      "mean": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "max": 0.0
+    }
+  },
+  {
+    "users": 500,
+    "mode": "ON",
+    "runs": [
+      "queue-on-500-run3",
+      "queue-on-500-run4",
+      "queue-on-500-run5"
+    ],
+    "repetitions": 3,
+    "error_rate": 0.0020000000000000018,
+    "pending_max_all_runs": 162.0,
+    "pending_unresolved_runs": [],
+    "db_connections_max_all_runs": 23.0,
+    "reservation_p95_ms": {
+      "mean": 4490.519316666667,
+      "median": 4191.7541,
+      "min": 4091.19155,
+      "max": 5188.6123
+    },
+    "reservation_p99_ms": {
+      "mean": 5570.456183333334,
+      "median": 5547.5202500000005,
+      "min": 5546.4981,
+      "max": 5617.3502
+    },
+    "hikari_pending_max_observed": {
+      "mean": 137.0,
+      "median": 150.0,
+      "min": 99.0,
+      "max": 162.0
+    },
+    "acquire_mean_ms": {
+      "mean": 1314.4601045085683,
+      "median": 1378.9998514589179,
+      "min": 974.16385737,
+      "max": 1590.216604696787
+    },
+    "queue_wait_p95_ms": {
+      "mean": 6899.799999999998,
+      "median": 6834.499999999998,
+      "min": 6258,
+      "max": 7606.899999999997
+    },
+    "end_to_end_p95_ms": {
+      "mean": 10330.216666666667,
+      "median": 10219,
+      "min": 9825.2,
+      "max": 10946.449999999999
+    },
+    "polls_per_user": {
+      "mean": 0.998,
+      "median": 0.998,
+      "min": 0.996,
+      "max": 1.0
+    }
+  },
+  {
+    "users": 1000,
+    "mode": "OFF",
+    "runs": [
+      "queue-off-1000-run1"
+    ],
+    "repetitions": 1,
+    "error_rate": 0.0030000000000000027,
+    "pending_max_all_runs": null,
+    "pending_unresolved_runs": [
+      "queue-off-1000-run1"
+    ],
+    "db_connections_max_all_runs": 23.0,
+    "reservation_p95_ms": {
+      "mean": 16188.9441,
+      "median": 16188.9441,
+      "min": 16188.9441,
+      "max": 16188.9441
+    },
+    "reservation_p99_ms": {
+      "mean": 17440.62887,
+      "median": 17440.62887,
+      "min": 17440.62887,
+      "max": 17440.62887
+    },
+    "hikari_pending_max_observed": {
+      "mean": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "max": 0.0
+    },
+    "acquire_mean_ms": {
+      "mean": 2382.917220806419,
+      "median": 2382.917220806419,
+      "min": 2382.917220806419,
+      "max": 2382.917220806419
+    },
+    "queue_wait_p95_ms": null,
+    "end_to_end_p95_ms": {
+      "mean": 16480.05,
+      "median": 16480.05,
+      "min": 16480.05,
+      "max": 16480.05
+    },
+    "polls_per_user": {
+      "mean": 0.0,
+      "median": 0.0,
+      "min": 0.0,
+      "max": 0.0
+    }
+  },
+  {
+    "users": 1000,
+    "mode": "ON",
+    "runs": [
+      "queue-on-1000-run1"
+    ],
+    "repetitions": 1,
+    "error_rate": 0.0020000000000000018,
+    "pending_max_all_runs": 178.0,
+    "pending_unresolved_runs": [],
+    "db_connections_max_all_runs": 23.0,
+    "reservation_p95_ms": {
+      "mean": 8167.15895,
+      "median": 8167.15895,
+      "min": 8167.15895,
+      "max": 8167.15895
+    },
+    "reservation_p99_ms": {
+      "mean": 9015.68211,
+      "median": 9015.68211,
+      "min": 9015.68211,
+      "max": 9015.68211
+    },
+    "hikari_pending_max_observed": {
+      "mean": 178.0,
+      "median": 178.0,
+      "min": 178.0,
+      "max": 178.0
+    },
+    "acquire_mean_ms": {
+      "mean": 2154.7788609438876,
+      "median": 2154.7788609438876,
+      "min": 2154.7788609438876,
+      "max": 2154.7788609438876
+    },
+    "queue_wait_p95_ms": {
+      "mean": 8295.6,
+      "median": 8295.6,
+      "min": 8295.6,
+      "max": 8295.6
+    },
+    "end_to_end_p95_ms": {
+      "mean": 15566.3,
+      "median": 15566.3,
+      "min": 15566.3,
+      "max": 15566.3
+    },
+    "polls_per_user": {
+      "mean": 0.998,
+      "median": 0.998,
+      "min": 0.998,
+      "max": 0.998
+    }
+  }
+]

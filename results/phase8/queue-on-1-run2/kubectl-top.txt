@@ -1,0 +1,15 @@
+1792657218.343024
+NAME                            CPU(cores)   MEMORY(bytes)   
+ticketing-api-579778488-85pnf   130m         336Mi           
+ticketing-api-579778488-xwz2g   102m         333Mi           
+ticketing-phase8-tools          14m          2Mi             
+1792657220.9108229
+NAME                            CPU(cores)   MEMORY(bytes)   
+ticketing-api-579778488-85pnf   130m         336Mi           
+ticketing-api-579778488-xwz2g   102m         333Mi           
+ticketing-phase8-tools          14m          2Mi             
+1792657223.208736
+NAME                            CPU(cores)   MEMORY(bytes)   
+ticketing-api-579778488-85pnf   130m         336Mi           
+ticketing-api-579778488-xwz2g   102m         333Mi           
+ticketing-phase8-tools          14m          2Mi             

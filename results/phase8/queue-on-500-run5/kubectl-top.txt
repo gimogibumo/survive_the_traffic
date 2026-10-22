@@ -1,0 +1,42 @@
+1792668926.153163
+NAME                                      CPU(cores)   MEMORY(bytes)   
+ticketing-api-64b484f6f7-dvnqc            589m         361Mi           
+ticketing-api-64b484f6f7-fxs7f            543m         353Mi           
+ticketing-phase8-tools                    0m           2Mi             
+ticketing-queue-worker-5f76b54788-nl5fn   58m          199Mi           
+1792668928.7264361
+NAME                                      CPU(cores)   MEMORY(bytes)   
+ticketing-api-64b484f6f7-dvnqc            589m         361Mi           
+ticketing-api-64b484f6f7-fxs7f            543m         353Mi           
+ticketing-phase8-tools                    0m           2Mi             
+ticketing-queue-worker-5f76b54788-nl5fn   58m          199Mi           
+1792668931.0436962
+NAME                                      CPU(cores)   MEMORY(bytes)   
+ticketing-api-64b484f6f7-dvnqc            589m         361Mi           
+ticketing-api-64b484f6f7-fxs7f            543m         353Mi           
+ticketing-phase8-tools                    0m           2Mi             
+ticketing-queue-worker-5f76b54788-nl5fn   58m          199Mi           
+1792668933.766242
+NAME                                      CPU(cores)   MEMORY(bytes)   
+ticketing-api-64b484f6f7-dvnqc            589m         361Mi           
+ticketing-api-64b484f6f7-fxs7f            543m         353Mi           
+ticketing-phase8-tools                    0m           2Mi             
+ticketing-queue-worker-5f76b54788-nl5fn   58m          199Mi           
+1792668936.602529
+NAME                                      CPU(cores)   MEMORY(bytes)   
+ticketing-api-64b484f6f7-dvnqc            589m         361Mi           
+ticketing-api-64b484f6f7-fxs7f            543m         353Mi           
+ticketing-phase8-tools                    0m           2Mi             
+ticketing-queue-worker-5f76b54788-nl5fn   58m          199Mi           
+1792668939.1202781
+NAME                                      CPU(cores)   MEMORY(bytes)   
+ticketing-api-64b484f6f7-dvnqc            64m          361Mi           
+ticketing-api-64b484f6f7-fxs7f            427m         446Mi           
+ticketing-phase8-tools                    21m          3Mi             
+ticketing-queue-worker-5f76b54788-nl5fn   48m          200Mi           
+1792668941.802078
+NAME                                      CPU(cores)   MEMORY(bytes)   
+ticketing-api-64b484f6f7-dvnqc            64m          361Mi           
+ticketing-api-64b484f6f7-fxs7f            427m         446Mi           
+ticketing-phase8-tools                    21m          3Mi             
+ticketing-queue-worker-5f76b54788-nl5fn   48m          200Mi           

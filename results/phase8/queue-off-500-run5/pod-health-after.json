@@ -1,0 +1,22 @@
+[
+  {
+    "name": "ticketing-api-69786d4cf7-kwfr5",
+    "containers": [
+      {
+        "ready": true,
+        "restartCount": 0,
+        "lastTerminationReason": null
+      }
+    ]
+  },
+  {
+    "name": "ticketing-api-69786d4cf7-xs2rz",
+    "containers": [
+      {
+        "ready": true,
+        "restartCount": 0,
+        "lastTerminationReason": null
+      }
+    ]
+  }
+]

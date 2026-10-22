@@ -1,0 +1,56 @@
+{
+  "HIKARI_MAX_POOL_SIZE": "10",
+  "HIKARI_MIN_IDLE": "2",
+  "HIKARI_CONNECTION_TIMEOUT": "30000",
+  "TOMCAT_MAX_THREADS": "application default",
+  "jvmOverrideKeysPresent": [],
+  "deployments": [
+    {
+      "name": "ticketing-api",
+      "replicas": 2,
+      "image": "248189924429.dkr.ecr.ap-northeast-2.amazonaws.com/survive-the-traffic:6eae8a15a134abd05fcc72df7fa60bf393d15563",
+      "resources": {
+        "limits": {
+          "memory": "1Gi"
+        },
+        "requests": {
+          "cpu": "250m",
+          "memory": "512Mi"
+        }
+      },
+      "command": null,
+      "args": null,
+      "envNames": [
+        "QUEUE_ADMISSION_BYPASS_CONCERT_ID",
+        "REDIS_PORT",
+        "REDIS_SSL_ENABLED",
+        "APP_ROLE",
+        "QUEUE_ADMISSION_WORKER_ENABLED",
+        "SPRING_FLYWAY_ENABLED"
+      ]
+    },
+    {
+      "name": "ticketing-queue-worker",
+      "replicas": 1,
+      "image": "248189924429.dkr.ecr.ap-northeast-2.amazonaws.com/survive-the-traffic:6eae8a15a134abd05fcc72df7fa60bf393d15563",
+      "resources": {
+        "limits": {
+          "memory": "512Mi"
+        },
+        "requests": {
+          "cpu": "100m",
+          "memory": "256Mi"
+        }
+      },
+      "command": null,
+      "args": null,
+      "envNames": [
+        "REDIS_PORT",
+        "REDIS_SSL_ENABLED",
+        "APP_ROLE",
+        "QUEUE_ADMISSION_WORKER_ENABLED",
+        "SPRING_FLYWAY_ENABLED"
+      ]
+    }
+  ]
+}

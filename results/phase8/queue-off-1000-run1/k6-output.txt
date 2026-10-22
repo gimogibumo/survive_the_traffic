@@ -1,0 +1,4 @@
+time="2026-10-22T20:39:04+09:00" level=warning msg="Request Failed" error="Post \"http://k8s-ticketin-ticketin-69b717c52b-310633674.ap-northeast-2.elb.amazonaws.com/api/reservations\": EOF"
+time="2026-10-22T20:39:04+09:00" level=warning msg="Request Failed" error="Post \"http://k8s-ticketin-ticketin-69b717c52b-310633674.ap-northeast-2.elb.amazonaws.com/api/reservations\": EOF"
+time="2026-10-22T20:39:04+09:00" level=warning msg="Request Failed" error="Post \"http://k8s-ticketin-ticketin-69b717c52b-310633674.ap-northeast-2.elb.amazonaws.com/api/reservations\": EOF"
+time="2026-10-22T20:39:22+09:00" level=error msg="thresholds on metrics 'reservation_success' have been crossed"

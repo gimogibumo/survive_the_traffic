@@ -1,0 +1,276 @@
+{
+  "ticketing-api-b576d5576-g5fhr": {
+    "hikaricp.connections": {
+      "availableTags": [
+        {
+          "tag": "pool",
+          "values": [
+            "HikariPool-1"
+          ]
+        }
+      ],
+      "description": "Total connections",
+      "measurements": [
+        {
+          "statistic": "VALUE",
+          "value": 4.0
+        }
+      ],
+      "name": "hikaricp.connections"
+    },
+    "hikaricp.connections.active": {
+      "availableTags": [
+        {
+          "tag": "pool",
+          "values": [
+            "HikariPool-1"
+          ]
+        }
+      ],
+      "description": "Active connections",
+      "measurements": [
+        {
+          "statistic": "VALUE",
+          "value": 0.0
+        }
+      ],
+      "name": "hikaricp.connections.active"
+    },
+    "hikaricp.connections.idle": {
+      "availableTags": [
+        {
+          "tag": "pool",
+          "values": [
+            "HikariPool-1"
+          ]
+        }
+      ],
+      "description": "Idle connections",
+      "measurements": [
+        {
+          "statistic": "VALUE",
+          "value": 4.0
+        }
+      ],
+      "name": "hikaricp.connections.idle"
+    },
+    "hikaricp.connections.pending": {
+      "availableTags": [
+        {
+          "tag": "pool",
+          "values": [
+            "HikariPool-1"
+          ]
+        }
+      ],
+      "description": "Pending threads",
+      "measurements": [
+        {
+          "statistic": "VALUE",
+          "value": 0.0
+        }
+      ],
+      "name": "hikaricp.connections.pending"
+    },
+    "hikaricp.connections.acquire": {
+      "availableTags": [
+        {
+          "tag": "pool",
+          "values": [
+            "HikariPool-1"
+          ]
+        }
+      ],
+      "baseUnit": "seconds",
+      "description": "Connection acquire time",
+      "measurements": [
+        {
+          "statistic": "COUNT",
+          "value": 34.0
+        },
+        {
+          "statistic": "TOTAL_TIME",
+          "value": 3.060524153
+        },
+        {
+          "statistic": "MAX",
+          "value": 0.284164217
+        }
+      ],
+      "name": "hikaricp.connections.acquire"
+    },
+    "hikaricp.connections.timeout": {
+      "availableTags": [
+        {
+          "tag": "pool",
+          "values": [
+            "HikariPool-1"
+          ]
+        }
+      ],
+      "description": "Connection timeout total count",
+      "measurements": [
+        {
+          "statistic": "COUNT",
+          "value": 0.0
+        }
+      ],
+      "name": "hikaricp.connections.timeout"
+    },
+    "hikaricp.connections.max": {
+      "availableTags": [
+        {
+          "tag": "pool",
+          "values": [
+            "HikariPool-1"
+          ]
+        }
+      ],
+      "description": "Max connections",
+      "measurements": [
+        {
+          "statistic": "VALUE",
+          "value": 10.0
+        }
+      ],
+      "name": "hikaricp.connections.max"
+    }
+  },
+  "ticketing-api-b576d5576-wqzjs": {
+    "hikaricp.connections": {
+      "availableTags": [
+        {
+          "tag": "pool",
+          "values": [
+            "HikariPool-1"
+          ]
+        }
+      ],
+      "description": "Total connections",
+      "measurements": [
+        {
+          "statistic": "VALUE",
+          "value": 4.0
+        }
+      ],
+      "name": "hikaricp.connections"
+    },
+    "hikaricp.connections.active": {
+      "availableTags": [
+        {
+          "tag": "pool",
+          "values": [
+            "HikariPool-1"
+          ]
+        }
+      ],
+      "description": "Active connections",
+      "measurements": [
+        {
+          "statistic": "VALUE",
+          "value": 0.0
+        }
+      ],
+      "name": "hikaricp.connections.active"
+    },
+    "hikaricp.connections.idle": {
+      "availableTags": [
+        {
+          "tag": "pool",
+          "values": [
+            "HikariPool-1"
+          ]
+        }
+      ],
+      "description": "Idle connections",
+      "measurements": [
+        {
+          "statistic": "VALUE",
+          "value": 4.0
+        }
+      ],
+      "name": "hikaricp.connections.idle"
+    },
+    "hikaricp.connections.pending": {
+      "availableTags": [
+        {
+          "tag": "pool",
+          "values": [
+            "HikariPool-1"
+          ]
+        }
+      ],
+      "description": "Pending threads",
+      "measurements": [
+        {
+          "statistic": "VALUE",
+          "value": 0.0
+        }
+      ],
+      "name": "hikaricp.connections.pending"
+    },
+    "hikaricp.connections.acquire": {
+      "availableTags": [
+        {
+          "tag": "pool",
+          "values": [
+            "HikariPool-1"
+          ]
+        }
+      ],
+      "baseUnit": "seconds",
+      "description": "Connection acquire time",
+      "measurements": [
+        {
+          "statistic": "COUNT",
+          "value": 37.0
+        },
+        {
+          "statistic": "TOTAL_TIME",
+          "value": 4.905493129
+        },
+        {
+          "statistic": "MAX",
+          "value": 0.569745726
+        }
+      ],
+      "name": "hikaricp.connections.acquire"
+    },
+    "hikaricp.connections.timeout": {
+      "availableTags": [
+        {
+          "tag": "pool",
+          "values": [
+            "HikariPool-1"
+          ]
+        }
+      ],
+      "description": "Connection timeout total count",
+      "measurements": [
+        {
+          "statistic": "COUNT",
+          "value": 0.0
+        }
+      ],
+      "name": "hikaricp.connections.timeout"
+    },
+    "hikaricp.connections.max": {
+      "availableTags": [
+        {
+          "tag": "pool",
+          "values": [
+            "HikariPool-1"
+          ]
+        }
+      ],
+      "description": "Max connections",
+      "measurements": [
+        {
+          "statistic": "VALUE",
+          "value": 10.0
+        }
+      ],
+      "name": "hikaricp.connections.max"
+    }
+  }
+}

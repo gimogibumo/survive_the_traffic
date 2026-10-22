@@ -1,0 +1,1 @@
+50명 OFF의 k6 예약은 50/50 성공했다. 측정 중 EKS exec/top과 이후 CloudWatch 조회가 connection reset으로 실패했다. AWS STS와 GitHub의 공개 HTTPS도 같은 오류여서 외부 연결 장애로 분류했다. Queue/Pod/PostgreSQL 관측이 불완전하므로 최종 ON/OFF 비교에서는 제외하고 연결 복구 뒤 같은 50명 부하를 다시 측정한다. Hikari 표본과 k6 결과는 원본 그대로 보존한다.

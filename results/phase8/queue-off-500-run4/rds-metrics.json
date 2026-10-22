@@ -1,0 +1,131 @@
+{
+  "MetricDataResults": [
+    {
+      "Id": "rds0",
+      "Label": "AWS/RDS ticketing-postgres DatabaseConnections",
+      "Timestamps": [
+        "2026-10-22T20:30:00+09:00",
+        "2026-10-22T20:29:00+09:00"
+      ],
+      "Values": [
+        20.0,
+        5.0
+      ],
+      "StatusCode": "Complete"
+    },
+    {
+      "Id": "rds1",
+      "Label": "AWS/RDS ticketing-postgres CPUUtilization",
+      "Timestamps": [
+        "2026-10-22T20:30:00+09:00",
+        "2026-10-22T20:29:00+09:00"
+      ],
+      "Values": [
+        5.5716570057965225,
+        4.041666666666666
+      ],
+      "StatusCode": "Complete"
+    },
+    {
+      "Id": "rds2",
+      "Label": "AWS/RDS ticketing-postgres ReadIOPS",
+      "Timestamps": [
+        "2026-10-22T20:30:00+09:00",
+        "2026-10-22T20:29:00+09:00"
+      ],
+      "Values": [
+        1.7497958571499992,
+        0.13336667500208385
+      ],
+      "StatusCode": "Complete"
+    },
+    {
+      "Id": "rds3",
+      "Label": "AWS/RDS ticketing-postgres WriteIOPS",
+      "Timestamps": [
+        "2026-10-22T20:30:00+09:00",
+        "2026-10-22T20:29:00+09:00"
+      ],
+      "Values": [
+        9.015614844934758,
+        1.9838292906559973
+      ],
+      "StatusCode": "Complete"
+    },
+    {
+      "Id": "rds4",
+      "Label": "AWS/RDS ticketing-postgres FreeableMemory",
+      "Timestamps": [
+        "2026-10-22T20:30:00+09:00",
+        "2026-10-22T20:29:00+09:00"
+      ],
+      "Values": [
+        129421312.0,
+        162738176.0
+      ],
+      "StatusCode": "Complete"
+    },
+    {
+      "Id": "rds5",
+      "Label": "AWS/RDS ticketing-postgres CPUCreditBalance",
+      "Timestamps": [
+        "2026-10-22T20:30:00+09:00"
+      ],
+      "Values": [
+        50.35603041666667
+      ],
+      "StatusCode": "Complete"
+    },
+    {
+      "Id": "rds6",
+      "Label": "AWS/RDS ticketing-postgres CPUSurplusCreditsCharged",
+      "Timestamps": [
+        "2026-10-22T20:30:00+09:00"
+      ],
+      "Values": [
+        0.0
+      ],
+      "StatusCode": "Complete"
+    },
+    {
+      "Id": "node0",
+      "Label": "AWS/EC2 i-0717ef29b3a07393c CPUCreditBalance",
+      "Timestamps": [
+        "2026-10-22T20:29:00+09:00"
+      ],
+      "Values": [
+        91.45557448333334
+      ],
+      "StatusCode": "Complete"
+    },
+    {
+      "Id": "node1",
+      "Label": "AWS/EC2 i-0717ef29b3a07393c CPUSurplusCreditsCharged",
+      "Timestamps": [
+        "2026-10-22T20:29:00+09:00"
+      ],
+      "Values": [
+        0.0
+      ],
+      "StatusCode": "Complete"
+    },
+    {
+      "Id": "node2",
+      "Label": "AWS/EC2 i-0717ef29b3a07393c CPUUtilization",
+      "Timestamps": [
+        "2026-10-22T20:29:00+09:00"
+      ],
+      "Values": [
+        63.585452848428275
+      ],
+      "StatusCode": "Complete"
+    }
+  ],
+  "Messages": [],
+  "QueryWindow": {
+    "measurementStart": 1792668597.162575,
+    "measurementEnd": 1792668608.5054789,
+    "cloudwatchStart": 1792668540,
+    "cloudwatchEnd": 1792668660
+  }
+}

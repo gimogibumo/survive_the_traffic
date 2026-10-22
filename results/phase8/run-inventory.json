@@ -1,0 +1,237 @@
+[
+  {
+    "run": "queue-off-1-run1",
+    "notes": [
+      "queue-off-1-run1/preflight-failure.md"
+    ],
+    "status": "preflight-only"
+  },
+  {
+    "run": "queue-off-1-run2",
+    "notes": [],
+    "status": "reference-or-excluded",
+    "users": 1,
+    "mode": "OFF",
+    "protocolVersion": 1,
+    "startUtc": "2026-10-22T08:12:10.966250+00:00",
+    "endUtc": "2026-10-22T08:12:29.782185+00:00"
+  },
+  {
+    "run": "queue-off-100-run1",
+    "notes": [],
+    "status": "reference-or-excluded",
+    "users": 100,
+    "mode": "OFF",
+    "protocolVersion": 1,
+    "startUtc": "2026-10-22T08:43:57.467922+00:00",
+    "endUtc": "2026-10-22T08:44:30.491498+00:00"
+  },
+  {
+    "run": "queue-off-100-run2",
+    "notes": [],
+    "status": "primary",
+    "users": 100,
+    "mode": "OFF",
+    "protocolVersion": 2,
+    "startUtc": "2026-10-22T09:12:24.758375+00:00",
+    "endUtc": "2026-10-22T09:12:57.507775+00:00"
+  },
+  {
+    "run": "queue-off-1000-run1",
+    "notes": [],
+    "status": "primary",
+    "users": 1000,
+    "mode": "OFF",
+    "protocolVersion": 2,
+    "startUtc": "2026-10-22T11:36:44.354274+00:00",
+    "endUtc": "2026-10-22T11:39:26.175021+00:00"
+  },
+  {
+    "run": "queue-off-50-run1",
+    "notes": [
+      "queue-off-50-run1/collection-failure.md"
+    ],
+    "status": "reference-or-excluded",
+    "users": 50,
+    "mode": "OFF",
+    "protocolVersion": 1,
+    "startUtc": "2026-10-22T08:22:08.885987+00:00",
+    "endUtc": "2026-10-22T08:22:34.655360+00:00"
+  },
+  {
+    "run": "queue-off-50-run2",
+    "notes": [],
+    "status": "reference-or-excluded",
+    "users": 50,
+    "mode": "OFF",
+    "protocolVersion": 1,
+    "startUtc": "2026-10-22T08:40:13.002633+00:00",
+    "endUtc": "2026-10-22T08:40:38.777925+00:00"
+  },
+  {
+    "run": "queue-off-50-run3",
+    "notes": [],
+    "status": "primary",
+    "users": 50,
+    "mode": "OFF",
+    "protocolVersion": 2,
+    "startUtc": "2026-10-22T09:07:30.238251+00:00",
+    "endUtc": "2026-10-22T09:07:56.119966+00:00"
+  },
+  {
+    "run": "queue-off-500-run1",
+    "notes": [
+      "queue-off-500-run1/invalid-control.md"
+    ],
+    "status": "reference-or-excluded",
+    "users": 500,
+    "mode": "OFF",
+    "protocolVersion": 1,
+    "startUtc": "2026-10-22T08:57:05.601698+00:00",
+    "endUtc": "2026-10-22T08:58:28.919837+00:00"
+  },
+  {
+    "run": "queue-off-500-run3",
+    "notes": [
+      "queue-off-500-run3/outcome-note.md"
+    ],
+    "status": "primary",
+    "users": 500,
+    "mode": "OFF",
+    "protocolVersion": 2,
+    "startUtc": "2026-10-22T11:07:21.858552+00:00",
+    "endUtc": "2026-10-22T11:08:49.238496+00:00"
+  },
+  {
+    "run": "queue-off-500-run4",
+    "notes": [],
+    "status": "primary",
+    "users": 500,
+    "mode": "OFF",
+    "protocolVersion": 2,
+    "startUtc": "2026-10-22T11:28:40.340121+00:00",
+    "endUtc": "2026-10-22T11:30:08.505479+00:00"
+  },
+  {
+    "run": "queue-off-500-run5",
+    "notes": [
+      "queue-off-500-run5/sampling-note.md"
+    ],
+    "status": "primary",
+    "users": 500,
+    "mode": "OFF",
+    "protocolVersion": 2,
+    "startUtc": "2026-10-22T11:31:12.854888+00:00",
+    "endUtc": "2026-10-22T11:32:40.316656+00:00"
+  },
+  {
+    "run": "queue-on-1-run1",
+    "notes": [
+      "queue-on-1-run1/preflight-failure.md"
+    ],
+    "status": "preflight-only"
+  },
+  {
+    "run": "queue-on-1-run2",
+    "notes": [],
+    "status": "reference-or-excluded",
+    "users": 1,
+    "mode": "ON",
+    "protocolVersion": 1,
+    "startUtc": "2026-10-22T08:20:04.485879+00:00",
+    "endUtc": "2026-10-22T08:20:24.645468+00:00"
+  },
+  {
+    "run": "queue-on-100-run1",
+    "notes": [],
+    "status": "reference-or-excluded",
+    "users": 100,
+    "mode": "ON",
+    "protocolVersion": 1,
+    "startUtc": "2026-10-22T08:45:42.826492+00:00",
+    "endUtc": "2026-10-22T08:46:17.596799+00:00"
+  },
+  {
+    "run": "queue-on-100-run2",
+    "notes": [],
+    "status": "primary",
+    "users": 100,
+    "mode": "ON",
+    "protocolVersion": 2,
+    "startUtc": "2026-10-22T09:10:44.479373+00:00",
+    "endUtc": "2026-10-22T09:11:19.442057+00:00"
+  },
+  {
+    "run": "queue-on-1000-run1",
+    "notes": [],
+    "status": "primary",
+    "users": 1000,
+    "mode": "ON",
+    "protocolVersion": 2,
+    "startUtc": "2026-10-22T11:40:37.078172+00:00",
+    "endUtc": "2026-10-22T11:43:17.004110+00:00"
+  },
+  {
+    "run": "queue-on-50-run2",
+    "notes": [],
+    "status": "reference-or-excluded",
+    "users": 50,
+    "mode": "ON",
+    "protocolVersion": 1,
+    "startUtc": "2026-10-22T08:38:37.876911+00:00",
+    "endUtc": "2026-10-22T08:39:05.063221+00:00"
+  },
+  {
+    "run": "queue-on-50-run3",
+    "notes": [],
+    "status": "primary",
+    "users": 50,
+    "mode": "ON",
+    "protocolVersion": 2,
+    "startUtc": "2026-10-22T09:09:07.818435+00:00",
+    "endUtc": "2026-10-22T09:09:35.112830+00:00"
+  },
+  {
+    "run": "queue-on-500-run2",
+    "notes": [
+      "queue-on-500-run2/interrupted-run.md"
+    ],
+    "status": "interrupted",
+    "users": 500,
+    "mode": "ON",
+    "protocolVersion": 2,
+    "startUtc": "2026-10-22T09:14:07.542256+00:00"
+  },
+  {
+    "run": "queue-on-500-run3",
+    "notes": [],
+    "status": "primary",
+    "users": 500,
+    "mode": "ON",
+    "protocolVersion": 2,
+    "startUtc": "2026-10-22T11:09:49.312407+00:00",
+    "endUtc": "2026-10-22T11:11:25.330559+00:00"
+  },
+  {
+    "run": "queue-on-500-run4",
+    "notes": [
+      "queue-on-500-run4/outcome-note.md"
+    ],
+    "status": "primary",
+    "users": 500,
+    "mode": "ON",
+    "protocolVersion": 2,
+    "startUtc": "2026-10-22T11:12:35.537744+00:00",
+    "endUtc": "2026-10-22T11:14:06.577036+00:00"
+  },
+  {
+    "run": "queue-on-500-run5",
+    "notes": [],
+    "status": "primary",
+    "users": 500,
+    "mode": "ON",
+    "protocolVersion": 2,
+    "startUtc": "2026-10-22T11:34:10.187628+00:00",
+    "endUtc": "2026-10-22T11:35:42.597257+00:00"
+  }
+]

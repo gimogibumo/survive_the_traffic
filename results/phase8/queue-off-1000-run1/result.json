@@ -1,0 +1,36 @@
+{
+  "login_success": {
+    "passes": 1000,
+    "fails": 0,
+    "rate": 1
+  },
+  "reservation_success": {
+    "fails": 3,
+    "rate": 0.997,
+    "passes": 997
+  },
+  "reservation_latency": {
+    "p(95)": 16188.9441,
+    "p(99)": 17440.62887,
+    "max": 17597.55,
+    "avg": 7157.563593999999,
+    "min": 65.15,
+    "med": 6448.2065,
+    "p(90)": 15673.286399999999
+  },
+  "queue_wait_time": null,
+  "queue_status_poll_count": null,
+  "late_users": {
+    "count": 0,
+    "rate": 0
+  },
+  "burst_lateness_ms": {
+    "p(99)": 113,
+    "max": 113,
+    "avg": 67.457,
+    "min": 0,
+    "med": 70,
+    "p(90)": 108,
+    "p(95)": 111
+  }
+}

@@ -1,0 +1,6 @@
+1792657348.79541
+NAME                                      CPU(cores)   MEMORY(bytes)   
+ticketing-api-6cf6d6b66f-28hgl            350m         335Mi           
+ticketing-api-6cf6d6b66f-m2v9f            355m         335Mi           
+ticketing-phase8-tools                    5m           2Mi             
+ticketing-queue-worker-5f76b54788-cfr95   907m         199Mi           

@@ -1,0 +1,456 @@
+{
+  "metrics": {
+    "reservation_latency": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 1028.6174999999998,
+        "p(90)": 1214.7552,
+        "p(95)": 1232.71275,
+        "p(99)": 1254.6685599999998,
+        "max": 1263.908,
+        "avg": 944.6396,
+        "min": 403.587
+      }
+    },
+    "http_req_sending": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 0.002,
+        "med": 0.038,
+        "p(90)": 0.1592,
+        "p(95)": 0.21139999999999992,
+        "p(99)": 0.36611,
+        "max": 0.518,
+        "avg": 0.066165
+      }
+    },
+    "http_req_failed": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 200
+      }
+    },
+    "http_req_tls_handshaking": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 0,
+        "p(90)": 0,
+        "p(95)": 0,
+        "p(99)": 0,
+        "max": 0,
+        "avg": 0,
+        "min": 0
+      }
+    },
+    "data_sent": {
+      "type": "counter",
+      "contains": "data",
+      "values": {
+        "count": 56246,
+        "rate": 2542.7370693415965
+      }
+    },
+    "http_req_waiting": {
+      "contains": "time",
+      "values": {
+        "p(99)": 1635.9163199999996,
+        "max": 1814.826,
+        "avg": 413.4124700000001,
+        "min": 10.107,
+        "med": 194.9735,
+        "p(90)": 1151.2722,
+        "p(95)": 1201.1890999999998
+      },
+      "type": "trend"
+    },
+    "http_req_duration{endpoint:queue_join}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 0,
+        "p(95)": 0,
+        "p(99)": 0,
+        "max": 0,
+        "avg": 0,
+        "min": 0,
+        "med": 0
+      },
+      "thresholds": {
+        "max>=0": {
+          "ok": true
+        }
+      }
+    },
+    "http_req_blocked": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 0.01,
+        "p(90)": 7.3225,
+        "p(95)": 7.91275,
+        "p(99)": 8.7435,
+        "max": 23.733,
+        "avg": 1.9048299999999956,
+        "min": 0
+      }
+    },
+    "checks": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "passes": 50,
+        "fails": 0,
+        "rate": 1
+      }
+    },
+    "auth_ready": {
+      "values": {
+        "count": 50,
+        "rate": 2.2603714658301004
+      },
+      "type": "counter",
+      "contains": "default"
+    },
+    "reservation_end_to_end": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 1214.8,
+        "p(95)": 1232.8999999999999,
+        "p(99)": 1254.69,
+        "max": 1264,
+        "avg": 944.8,
+        "min": 405,
+        "med": 1028.5
+      }
+    },
+    "vus": {
+      "type": "gauge",
+      "contains": "default",
+      "values": {
+        "value": 21,
+        "min": 21,
+        "max": 50
+      }
+    },
+    "http_req_failed{endpoint:reservation}": {
+      "contains": "default",
+      "values": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 50
+      },
+      "thresholds": {
+        "rate>=0": {
+          "ok": true
+        }
+      },
+      "type": "rate"
+    },
+    "http_req_duration{endpoint:queue_status}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 0,
+        "avg": 0,
+        "min": 0,
+        "med": 0,
+        "p(90)": 0,
+        "p(95)": 0,
+        "p(99)": 0
+      },
+      "thresholds": {
+        "max>=0": {
+          "ok": true
+        }
+      }
+    },
+    "vus_max": {
+      "values": {
+        "max": 50,
+        "value": 50,
+        "min": 50
+      },
+      "type": "gauge",
+      "contains": "default"
+    },
+    "iterations": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 50,
+        "rate": 2.2603714658301004
+      }
+    },
+    "http_req_duration{endpoint:reservation}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 1232.71275,
+        "p(99)": 1254.6685599999998,
+        "max": 1263.908,
+        "avg": 944.6396,
+        "min": 403.587,
+        "med": 1028.6174999999998,
+        "p(90)": 1214.7552
+      },
+      "thresholds": {
+        "max>=0": {
+          "ok": true
+        }
+      }
+    },
+    "http_req_duration{endpoint:login}": {
+      "thresholds": {
+        "max>=0": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 1619.2101499999999,
+        "p(99)": 1811.57668,
+        "max": 1832.239,
+        "avg": 669.4177400000001,
+        "min": 197.167,
+        "med": 519.0709999999999,
+        "p(90)": 1327.2855000000002
+      }
+    },
+    "burst_lateness_ms": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 2,
+        "p(95)": 2,
+        "p(99)": 2,
+        "max": 2,
+        "avg": 1.84,
+        "min": 1,
+        "med": 2
+      }
+    },
+    "http_req_receiving": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 0.045,
+        "med": 1.218,
+        "p(90)": 51.41090000000005,
+        "p(95)": 91.58699999999992,
+        "p(99)": 153.24695999999997,
+        "max": 162.02,
+        "avg": 18.966224999999998
+      }
+    },
+    "reservation_success": {
+      "values": {
+        "rate": 1,
+        "passes": 50,
+        "fails": 0
+      },
+      "thresholds": {
+        "rate==1": {
+          "ok": true
+        }
+      },
+      "type": "rate",
+      "contains": "default"
+    },
+    "iteration_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 22070.682634,
+        "p(95)": 22088.7526106,
+        "p(99)": 22110.29289651,
+        "max": 22119.479417,
+        "avg": 21800.539360000002,
+        "min": 21260.045833,
+        "med": 21884.412208499998
+      }
+    },
+    "http_reqs{endpoint:reservation}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 50,
+        "rate": 2.2603714658301004
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "http_reqs": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 200,
+        "rate": 9.041485863320402
+      }
+    },
+    "login_success": {
+      "contains": "default",
+      "values": {
+        "rate": 1,
+        "passes": 50,
+        "fails": 0
+      },
+      "thresholds": {
+        "rate==1": {
+          "ok": true
+        }
+      },
+      "type": "rate"
+    },
+    "late_users": {
+      "contains": "default",
+      "values": {
+        "count": 0,
+        "rate": 0
+      },
+      "thresholds": {
+        "count==0": {
+          "ok": true
+        }
+      },
+      "type": "counter"
+    },
+    "reservation_status": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 50,
+        "rate": 2.2603714658301004
+      }
+    },
+    "http_reqs{endpoint:queue_status}": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 0,
+        "rate": 0
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      }
+    },
+    "http_req_connecting": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 8.871,
+        "avg": 1.7723750000000005,
+        "min": 0,
+        "med": 0,
+        "p(90)": 7.147,
+        "p(95)": 7.6808,
+        "p(99)": 8.54872
+      }
+    },
+    "http_req_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "avg": 432.44485999999995,
+        "min": 10.348,
+        "med": 202.2755,
+        "p(90)": 1197.5521999999999,
+        "p(95)": 1221.4085499999999,
+        "p(99)": 1655.0765799999997,
+        "max": 1832.239
+      }
+    },
+    "data_received": {
+      "type": "counter",
+      "contains": "data",
+      "values": {
+        "count": 120625,
+        "rate": 5453.146161315117
+      }
+    },
+    "http_req_duration{expected_response:true}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 202.2755,
+        "p(90)": 1197.5521999999999,
+        "p(95)": 1221.4085499999999,
+        "p(99)": 1655.0765799999997,
+        "max": 1832.239,
+        "avg": 432.44485999999995,
+        "min": 10.348
+      }
+    },
+    "http_reqs{endpoint:login}": {
+      "values": {
+        "count": 50,
+        "rate": 2.2603714658301004
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      },
+      "type": "counter",
+      "contains": "default"
+    },
+    "http_reqs{endpoint:queue_join}": {
+      "contains": "default",
+      "values": {
+        "count": 0,
+        "rate": 0
+      },
+      "thresholds": {
+        "count>=0": {
+          "ok": true
+        }
+      },
+      "type": "counter"
+    }
+  },
+  "root_group": {
+    "name": "",
+    "path": "",
+    "id": "d41d8cd98f00b204e9800998ecf8427e",
+    "groups": [],
+    "checks": [
+        {
+          "fails": 0,
+          "name": "reservation created",
+          "path": "::reservation created",
+          "id": "d9e6c12b69d878d2b372b755fd0aae25",
+          "passes": 50
+        }
+      ]
+  },
+  "options": {
+    "noColor": true,
+    "summaryTrendStats": [
+      "avg",
+      "min",
+      "med",
+      "p(90)",
+      "p(95)",
+      "p(99)",
+      "max"
+    ],
+    "summaryTimeUnit": ""
+  },
+  "state": {
+    "isStdOutTTY": false,
+    "isStdErrTTY": false,
+    "testRunDurationMs": 22120.258
+  }
+}

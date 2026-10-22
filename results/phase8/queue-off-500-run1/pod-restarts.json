@@ -1,0 +1,26 @@
+[
+  {
+    "name": "ticketing-api-85bd964585-qwcsk",
+    "lastTerminated": [
+      {
+        "containerID": "containerd://fc9302d553a328ade02ff327a0fdedb589c72795d2076de849b1e9e805e202e8",
+        "exitCode": 143,
+        "finishedAt": "2026-10-22T08:57:43Z",
+        "reason": "Error",
+        "startedAt": "2026-10-22T08:56:01Z"
+      }
+    ]
+  },
+  {
+    "name": "ticketing-api-85bd964585-wb8l7",
+    "lastTerminated": [
+      {
+        "containerID": "containerd://0acc3be14adcde855dd82258389a6b849bcaa4bb08c3a8f98cb8ddfabf4b341f",
+        "exitCode": 143,
+        "finishedAt": "2026-10-22T08:57:45Z",
+        "reason": "Error",
+        "startedAt": "2026-10-22T08:56:17Z"
+      }
+    ]
+  }
+]
