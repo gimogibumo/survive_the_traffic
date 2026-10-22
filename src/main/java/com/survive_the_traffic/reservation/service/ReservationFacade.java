@@ -4,6 +4,7 @@ import com.survive_the_traffic.common.exception.AdmissionRequiredException;
 import com.survive_the_traffic.queue.service.QueueAdmissionService;
 import com.survive_the_traffic.reservation.dto.ReservationRequest;
 import com.survive_the_traffic.reservation.dto.ReservationResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -12,6 +13,10 @@ public class ReservationFacade {
     private final QueueAdmissionService queueAdmissionService;
 
     private final ReservationService reservationService;
+
+    // Default 0 keeps admission mandatory. Only the isolated load-test concert may bypass it.
+    @Value("${queue.admission.bypass-concert-id:0}")
+    private long admissionBypassConcertId;
 
 
     public ReservationFacade(
@@ -48,7 +53,9 @@ public class ReservationFacade {
          * Reservation 성공 이후 admission을 소비하지도 않는다.
          */
         boolean admitted =
-            queueAdmissionService
+            (admissionBypassConcertId > 0 && concertId != null
+                && concertId == admissionBypassConcertId)
+            || queueAdmissionService
                 .isAdmitted(
                     concertId,
                     userId

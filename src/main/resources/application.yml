@@ -59,5 +59,7 @@ app:
       - ${FRONTEND_ORIGIN:http://localhost:5173}
 
 queue:
+  admission:
+    bypass-concert-id: ${QUEUE_ADMISSION_BYPASS_CONCERT_ID:0}
   admission-worker:
     enabled: ${QUEUE_ADMISSION_WORKER_ENABLED:false}

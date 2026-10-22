@@ -15,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(
     MockitoExtension.class
@@ -42,6 +43,28 @@ class ReservationFacadeTest {
     @InjectMocks
     private ReservationFacade
         reservationFacade;
+
+    @Test
+    void 실험용_공연만_queue_off에서_admission을_생략한다() {
+        ReflectionTestUtils.setField(reservationFacade, "admissionBypassConcertId", CONCERT_ID);
+        ReservationRequest request = new ReservationRequest(CONCERT_ID, SEAT_ID);
+        ReservationResponse expected = mock(ReservationResponse.class);
+        given(reservationService.createReservation(USER_ID, request)).willReturn(expected);
+
+        assertThat(reservationFacade.createReservation(USER_ID, request)).isSameAs(expected);
+        then(queueAdmissionService).shouldHaveNoInteractions();
+    }
+
+    @Test
+    void queue_off_실험_중에도_다른_공연은_admission이_필요하다() {
+        ReflectionTestUtils.setField(reservationFacade, "admissionBypassConcertId", CONCERT_ID + 1);
+        ReservationRequest request = new ReservationRequest(CONCERT_ID, SEAT_ID);
+        given(queueAdmissionService.isAdmitted(CONCERT_ID, USER_ID)).willReturn(false);
+
+        assertThatThrownBy(() -> reservationFacade.createReservation(USER_ID, request))
+            .isInstanceOf(AdmissionRequiredException.class);
+        then(reservationService).shouldHaveNoInteractions();
+    }
 
 
     @Test
